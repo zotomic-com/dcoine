@@ -9,6 +9,7 @@ import {
   ExternalLink,
   ShieldCheck,
   User,
+  LogOut,
   Radio,
 } from 'lucide-react';
 import { BlockchainNetwork, UserProfile, UserWallet } from '../types';
@@ -24,6 +25,7 @@ interface HeaderProps {
   onOpenWalletModal: () => void;
   onOpenAuthModal: () => void;
   onToggleAdmin: () => void;
+  onLogout: () => void;
   isAdminMode: boolean;
   onOpenNotifications?: () => void;
   unreadNotificationsCount?: number;
@@ -37,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenWalletModal,
   onOpenAuthModal,
   onToggleAdmin,
+  onLogout,
   isAdminMode,
   onOpenNotifications,
   unreadNotificationsCount = 0,
@@ -186,6 +189,15 @@ export const Header: React.FC<HeaderProps> = ({
              title="Account & Security"
            >
              <User className="w-3.5 h-3.5" />
+           </button>
+
+           {/* Logout */}
+           <button
+             onClick={onLogout}
+             className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-red-400 hover:border-red-500/40 flex-shrink-0"
+             title="Logout"
+           >
+             <LogOut className="w-3.5 h-3.5" />
            </button>
         </div>
       </div>

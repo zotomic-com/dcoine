@@ -91,7 +91,16 @@ export default function App() {
     StorageService.setActiveNetwork(network.id);
   };
 
-  // Handle Admin Toggle (Challenge with 2FA modal if not already logged in as admin)
+  // Handle Logout
+  const handleLogout = () => {
+    setIsAdminMode(false);
+    setCurrentTab('dashboard');
+    const defaultUser = StorageService.getUser();
+    // reset to a fresh default by clearing stored user
+    localStorage.removeItem('dcoine_app_user_profile');
+    setUser(StorageService.getUser());
+    setAuthModalInitialMode('login');
+  };
   const handleToggleAdmin = () => {
     if (isAdminMode) {
       setIsAdminMode(false);
@@ -124,6 +133,7 @@ export default function App() {
           setAuthModalOpen(true);
         }}
         onToggleAdmin={handleToggleAdmin}
+        onLogout={handleLogout}
         isAdminMode={isAdminMode}
         unreadNotificationsCount={unreadNotificationsCount}
         onOpenNotifications={() => setNotificationModalOpen(true)}
