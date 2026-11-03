@@ -249,17 +249,6 @@ export const SwapView: React.FC<SwapViewProps> = ({
               <div>
                 <div className="flex items-center flex-wrap gap-2">
                   <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">DEX Liquidity Swap</h1>
-                  {onOpenAdmin && (
-                    <button
-                      type="button"
-                      onClick={onOpenAdmin}
-                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-[11px] font-semibold text-center leading-none tracking-normal transition cursor-pointer whitespace-nowrap shadow-sm"
-                      title="Edit swap functionality, dropdown tokens, and dev parameters in Admin"
-                    >
-                      <Sliders className="w-3 h-3 text-amber-400 shrink-0" />
-                      <span>Admin Dev Control</span>
-                    </button>
-                  )}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Powered by {swapConfig.routerName || 'Dcoine Multi-Hop Auto Router'}

@@ -162,49 +162,31 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* Admin Switcher Toggle */}
-          <button
-            onClick={onToggleAdmin}
-            className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full text-xs font-semibold transition flex-shrink-0 whitespace-nowrap ${
-              isAdminMode
-                ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.3)]'
-                : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-            }`}
-            title={isAdminMode ? 'Exit Admin Mode' : 'Admin Dashboard (2FA Protected)'}
-          >
-            <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="hidden md:inline">{isAdminMode ? 'Exit Admin' : 'Admin'}</span>
-          </button>
+           {/* Notification Center Trigger */}
+           {onOpenNotifications && (
+             <button
+               onClick={onOpenNotifications}
+               className="relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-slate-300 hover:text-amber-400 transition flex-shrink-0 cursor-pointer"
+               title="Notification Center"
+               aria-label="Open notifications"
+             >
+               <Bell className="w-3.5 h-3.5" />
+               {unreadNotificationsCount > 0 && (
+                 <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-slate-950">
+                   {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                 </span>
+               )}
+             </button>
+           )}
 
-          {/* Notification Center Trigger */}
-          {onOpenNotifications && (
-            <button
-              onClick={onOpenNotifications}
-              className="relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-slate-300 hover:text-amber-400 transition flex-shrink-0 cursor-pointer"
-              title="Notification Center"
-              aria-label="Open notifications"
-            >
-              <Bell className="w-3.5 h-3.5" />
-              {unreadNotificationsCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-slate-950">
-                  {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* User Profile / Auth */}
-          <button
-            onClick={onOpenAuthModal}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 overflow-hidden flex-shrink-0"
-            title="Account & Security"
-          >
-            {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-3.5 h-3.5" />
-            )}
-          </button>
+           {/* User Profile / Auth */}
+           <button
+             onClick={onOpenAuthModal}
+             className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 flex-shrink-0"
+             title="Account & Security"
+           >
+             <User className="w-3.5 h-3.5" />
+           </button>
         </div>
       </div>
     </header>
