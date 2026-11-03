@@ -25,7 +25,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   isMiningActive,
   isAdminMode,
 }) => {
-  const tabs = [
+  const tabs: any[] = [
     {
       id: 'dashboard' as NavTab,
       label: 'Home',
@@ -63,13 +63,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       label: 'Explorer',
       icon: Compass,
     },
-    {
+  ];
+
+  if (isAdminMode) {
+    tabs.push({
       id: 'admin' as NavTab,
       label: 'Admin',
       icon: ShieldCheck,
-      badgeText: isAdminMode ? 'ACTIVE' : undefined,
-    },
-  ];
+      badgeText: 'ACTIVE',
+    });
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-lg border-t border-slate-800/80 px-1 py-1 pb-[calc(env(safe-area-inset-bottom,0px)+4px)] transition-all">
