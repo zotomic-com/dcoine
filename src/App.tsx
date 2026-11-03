@@ -85,7 +85,12 @@ export default function App() {
     }
   }, []);
 
-  // Handle Network Change
+  // Ensure admin dashboard opens when admin mode is active
+  useEffect(() => {
+    if (isAdminMode) {
+      setCurrentTab('admin');
+    }
+  }, [isAdminMode]);
   const handleSelectNetwork = (network: BlockchainNetwork) => {
     setActiveNetwork(network);
     StorageService.setActiveNetwork(network.id);
