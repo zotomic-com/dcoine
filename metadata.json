@@ -1,0 +1,6 @@
+{
+  "name": "Dcoine - Decentralized Coin Ecosystem",
+  "description": "Dcoine is a next-generation decentralized blockchain ecosystem featuring 24h cloud mining, multi-chain non-custodial wallet management, P2P escrow trading marketplace, DEX swap, real-time crypto news, and DApp explorer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
