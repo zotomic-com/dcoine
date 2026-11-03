@@ -36,6 +36,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     initialMode === 'admin_login' ? 'admin_step1' : initialMode
   );
 
+  useEffect(() => {
+    setMode(initialMode === 'admin_login' ? 'admin_step1' : initialMode);
+  }, [initialMode, isOpen]);
+
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
