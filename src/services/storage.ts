@@ -309,8 +309,8 @@ const INITIAL_DAPPS: DAppItem[] = [
 const MASTER_ADMIN_SEED: UserProfile = {
   id: 'usr_admin_root',
   username: 'Admin',
-  email: 'admin@dcoine.network',
-  password: 'admin',
+  email: 'dcoiner.com@gmail.com',
+  password: 'Admin@dcoiner.com',
   referralCode: 'DCOIN-ROOT',
   role: 'admin',
   twoFactorEnabled: true,
@@ -361,7 +361,7 @@ export class StorageService {
       return defaultRegistry;
     }
     // Ensure admin exists
-    if (!saved.some((u) => u.email === 'admin@dcoine.network' || u.role === 'admin')) {
+    if (!saved.some((u) => u.email === 'dcoiner.com@gmail.com' || u.role === 'admin')) {
       saved.unshift(MASTER_ADMIN_SEED);
       this.setItem('users_registry', saved);
     }
