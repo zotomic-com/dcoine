@@ -26,6 +26,7 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
+  LogOut,
 } from 'lucide-react';
 import { MiningSession, TokenItem, TransactionRecord, UserProfile, UserWallet } from '../types';
 import { StorageService } from '../services/storage';
@@ -40,6 +41,7 @@ interface DashboardViewProps {
   miningSession: MiningSession;
   onUpdateUser: (user: UserProfile) => void;
   onNavigateTab: (tab: any) => void;
+  onLogout?: () => void;
 }
 
 const COUNTRIES = [
@@ -83,6 +85,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   miningSession,
   onUpdateUser,
   onNavigateTab,
+  onLogout,
 }) => {
   // Chart timeframe state
   const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | '1Y'>('1M');
@@ -265,6 +268,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Edit3 className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
               <span>Edit Profile</span>
             </button>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-rose-500/50 hover:bg-rose-950/40 text-xs text-rose-400 font-medium transition cursor-pointer"
+                title="Log Out of Account"
+              >
+                <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            )}
           </div>
         </div>
 

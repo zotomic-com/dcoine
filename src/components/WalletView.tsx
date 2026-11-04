@@ -23,11 +23,13 @@ import {
   Search,
   Pencil,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BlockchainNetwork, NetworkId, TokenItem, TransactionRecord, UserWallet } from '../types';
 import { NETWORKS, StorageService } from '../services/storage';
 import { generateAddress, generateMnemonic, generatePrivateKey, generateTxHash, shortenAddress } from '../utils/crypto';
+import { Web3WalletService, PROVIDER_DOWNLOAD_URLS } from '../services/web3Wallet';
 
 export interface WalletProviderDef {
   id: string;
@@ -97,6 +99,12 @@ export const WalletView: React.FC<WalletViewProps> = ({
   // Search & category filter for external wallets
   const [walletSearchQuery, setWalletSearchQuery] = useState('');
   const [walletCategoryFilter, setWalletCategoryFilter] = useState<'all' | 'popular' | 'evm' | 'solana' | 'hardware' | 'multi'>('all');
+
+  // Real Web3 Wallet Authorization states
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+  const [connectingProviderName, setConnectingProviderName] = useState('');
+  const [connectWalletError, setConnectWalletError] = useState<string | null>(null);
+  const [installGuideModal, setInstallGuideModal] = useState<{ name: string; url: string; providerId: string } | null>(null);
 
   // Wallet edit & delete management states
   const [editingWalletId, setEditingWalletId] = useState<string | null>(null);
@@ -176,9 +184,9 @@ export const WalletView: React.FC<WalletViewProps> = ({
     });
   };
 
-  // 2. Connect 3rd Party Wallet
-  const handleConnectProvider = (providerId: string, customDisplayName?: string) => {
-    const fakeAddress = generateAddress();
+  // 2. Connect 3rd Party Wallet (Real Web3 Authorization)
+  const handleConnectProvider = async (providerId: string, customDisplayName?: string) => {
+    setConnectWalletError(null);
     const matchedProvider = WALLET_PROVIDERS.find((p) => p.id === providerId);
     const finalName =
       customDisplayName ||
@@ -186,26 +194,75 @@ export const WalletView: React.FC<WalletViewProps> = ({
         ? `${matchedProvider.name} Wallet`
         : `${providerId.charAt(0).toUpperCase() + providerId.slice(1)} Wallet`);
 
+    setIsConnectingWallet(true);
+    setConnectingProviderName(finalName);
+
+    try {
+      const result = await Web3WalletService.connectWallet(providerId, finalName);
+      setIsConnectingWallet(false);
+
+      if (result.success && result.address) {
+        const newWallet: UserWallet = {
+          id: `w-${providerId.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}`,
+          name: `${finalName} (Authorized)`,
+          address: result.address,
+          isExternal: true,
+          provider: providerId,
+          network: activeNetwork.id,
+          isAuthorized: true,
+          createdAt: Date.now(),
+        };
+        const updated = [...wallets, newWallet];
+        onUpdateWallets(updated);
+        StorageService.saveWallets(updated);
+        onSelectWallet(newWallet);
+        setShowConnectModal(false);
+        setWalletSearchQuery('');
+        setWalletCategoryFilter('all');
+        confetti({
+          particleCount: 60,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        return;
+      }
+
+      if (!result.isRealProvider) {
+        setInstallGuideModal({
+          name: finalName,
+          url: result.installUrl || 'https://metamask.io/download/',
+          providerId,
+        });
+      } else {
+        setConnectWalletError(result.error || 'Connection authorization declined in wallet.');
+      }
+    } catch (err: any) {
+      setIsConnectingWallet(false);
+      setConnectWalletError(err?.message || 'Failed to authorize wallet connection.');
+    }
+  };
+
+  const handleConnectSimulatedFallback = (providerId: string, customDisplayName?: string) => {
+    const fakeAddress = generateAddress();
+    const finalName = customDisplayName || `${providerId} Wallet`;
     const newWallet: UserWallet = {
       id: `w-${providerId.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}`,
-      name: finalName,
+      name: `${finalName} (Simulated)`,
       address: fakeAddress,
       isExternal: true,
       provider: providerId,
       network: activeNetwork.id,
+      isAuthorized: false,
       createdAt: Date.now(),
     };
-
     const updated = [...wallets, newWallet];
     onUpdateWallets(updated);
     StorageService.saveWallets(updated);
     onSelectWallet(newWallet);
+    setInstallGuideModal(null);
     setShowConnectModal(false);
-    setWalletSearchQuery('');
-    setWalletCategoryFilter('all');
-
     confetti({
-      particleCount: 40,
+      particleCount: 35,
       spread: 50,
       origin: { y: 0.6 },
     });
@@ -709,6 +766,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
                   setShowConnectModal(false);
                   setWalletSearchQuery('');
                   setWalletCategoryFilter('all');
+                  setConnectWalletError(null);
                 }}
                 className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex-shrink-0"
                 title="Close"
@@ -716,6 +774,36 @@ export const WalletView: React.FC<WalletViewProps> = ({
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Awaiting Real Web3 Authorization Status */}
+            {isConnectingWallet && (
+              <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-300 animate-pulse">
+                <Loader2 className="w-5 h-5 animate-spin text-amber-400 shrink-0" />
+                <div>
+                  <span className="font-bold block">Awaiting Wallet Authorization...</span>
+                  <span className="text-[11px] text-slate-300">
+                    Please approve the connection prompt in your {connectingProviderName} popup window.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Connection Error Notification */}
+            {connectWalletError && (
+              <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{connectWalletError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setConnectWalletError(null)}
+                  className="p-1 hover:text-white text-slate-400 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
 
             {/* Wallet Search Box */}
             <div className="relative flex-shrink-0">
@@ -1372,10 +1460,58 @@ export const WalletView: React.FC<WalletViewProps> = ({
 
             <button
               onClick={() => setShowKeyDetailsModal(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold"
+              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 8. MODAL: Provider Extension Not Installed Prompt */}
+      {installGuideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4 text-center">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <WalletCards className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-white">{installGuideModal.name} Not Detected</h3>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                The {installGuideModal.name} browser extension was not found in your current browser. To connect and authorize with your real on-chain account, please install the official extension or open Dcoine in your wallet's built-in dApp browser.
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <a
+                href={installGuideModal.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+              >
+                <span>Install Official {installGuideModal.name}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleConnectSimulatedFallback(installGuideModal.providerId, installGuideModal.name)
+                }
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 transition cursor-pointer"
+              >
+                Connect in Simulated Demo Mode
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInstallGuideModal(null)}
+                className="text-xs text-slate-500 hover:text-slate-300 py-1 block mx-auto cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

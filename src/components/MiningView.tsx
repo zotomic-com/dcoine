@@ -15,13 +15,14 @@ import {
   ShieldCheck,
   ChevronRight,
   Lock,
+  LogIn,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MiningSession, Referee, UserProfile } from '../types';
 import { StorageService } from '../services/storage';
 
 interface MiningViewProps {
-  user: UserProfile;
+  user: UserProfile | null;
   miningSession: MiningSession;
   onUpdateSession: (session: MiningSession) => void;
   onOpenAuthModal: () => void;
@@ -46,7 +47,7 @@ export const MiningView: React.FC<MiningViewProps> = ({
 
   useEffect(() => {
     setReferees(StorageService.getReferees());
-  }, []);
+  }, [user]);
 
   // Mining rate formulas:
   // 1. Every active user mines exactly 1 DC every 24 hours (base rate = 1/24 DC/hr ≈ 0.041667 DC/hr)
@@ -56,16 +57,14 @@ export const MiningView: React.FC<MiningViewProps> = ({
   const referralBonus24h = activeRefereesCount * 0.1; // 0.1 DC per active referral / 24h (10 refs = 1 DC)
   const total24hYield = baseReward24h + referralBonus24h; // Total DC per 24 hours
   const hourlyMiningRate = total24hYield / 24; // Effective hourly hashrate
-  const referralBonusRate = activeRefereesCount * 0.1; // Multiplier representation (+10% per active ref)
 
   // 24-hour timer tick
   useEffect(() => {
     const updateCountdown = () => {
-      if (!miningSession.isActive || !miningSession.startTime || !miningSession.endTime) {
+      if (!user || !miningSession.isActive || !miningSession.startTime || !miningSession.endTime) {
         setTimeLeft({ hours: 24, minutes: 0, seconds: 0, progress: 0 });
         return;
       }
-
       const now = Date.now();
       const totalDuration = 24 * 3600 * 1000;
       const remainingMs = miningSession.endTime - now;
@@ -80,9 +79,9 @@ export const MiningView: React.FC<MiningViewProps> = ({
       const hours = Math.floor(remainingMs / (1000 * 60 * 60));
       const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
       const elapsed = totalDuration - remainingMs;
       const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-
       const minedSoFar = (elapsed / (1000 * 3600)) * hourlyMiningRate;
 
       setTimeLeft({ hours, minutes, seconds, progress });
@@ -92,12 +91,15 @@ export const MiningView: React.FC<MiningViewProps> = ({
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [miningSession, hourlyMiningRate, total24hYield]);
+  }, [miningSession, hourlyMiningRate, total24hYield, user]);
 
-  const referralLink = `${window.location.origin}/?ref=${user.referralCode}`;
+  const referralLink = user
+    ? `${window.location.origin}/?ref=${user.referralCode}`
+    : `${window.location.origin}/?ref=DCOIN-ROOT`;
 
   const handleStartMining = () => {
-    if (!user.referredBy && !user.id) {
+    // REQUIREMENT 4: Non-login users CANNOT start mining
+    if (!user) {
       onOpenAuthModal();
       return;
     }
@@ -113,7 +115,6 @@ export const MiningView: React.FC<MiningViewProps> = ({
       referralRatePerActiveRef: parseFloat((0.1 / 24).toFixed(6)),
       currentSessionMined: 0,
     };
-
     onUpdateSession(updated);
     StorageService.saveMiningSession(updated);
 
@@ -126,6 +127,11 @@ export const MiningView: React.FC<MiningViewProps> = ({
   };
 
   const handleClaim = () => {
+    if (!user) {
+      onOpenAuthModal();
+      return;
+    }
+
     const claimed = currentSessionMined > 0 ? currentSessionMined : parseFloat(total24hYield.toFixed(4));
     const updated: MiningSession = {
       ...miningSession,
@@ -157,9 +163,8 @@ export const MiningView: React.FC<MiningViewProps> = ({
     }
 
     // Credit to user profile lockedMinedBalance
-    const currentUser = StorageService.getUser();
-    currentUser.lockedMinedBalance = parseFloat(((currentUser.lockedMinedBalance || 0) + claimed).toFixed(4));
-    StorageService.saveUser(currentUser);
+    user.lockedMinedBalance = parseFloat(((user.lockedMinedBalance || 0) + claimed).toFixed(4));
+    StorageService.saveUser(user);
 
     StorageService.addTransaction({
       id: `tx-claim-${Date.now()}`,
@@ -184,23 +189,35 @@ export const MiningView: React.FC<MiningViewProps> = ({
   };
 
   const handleCopyLink = () => {
+    if (!user) {
+      onOpenAuthModal();
+      return;
+    }
     navigator.clipboard.writeText(referralLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleCopyCode = () => {
+    if (!user) {
+      onOpenAuthModal();
+      return;
+    }
     navigator.clipboard.writeText(user.referralCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
   const handleShare = async () => {
+    if (!user) {
+      onOpenAuthModal();
+      return;
+    }
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'Join Dcoine Ecosystem Mining',
-          text: `Join Dcoine decentralized cloud mining using my exclusive referral code ${user.referralCode} and get a 10% hashrate boost!`,
+          text: `Join Dcoine decentralized cloud mining using my referral code ${user.referralCode} and get a 10% hashrate boost!`,
           url: referralLink,
         });
       } catch {
@@ -218,7 +235,6 @@ export const MiningView: React.FC<MiningViewProps> = ({
       {/* Top Banner & Title */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-amber-950/30 border border-slate-800 p-5 shadow-2xl">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2.5 leading-none">
@@ -238,13 +254,38 @@ export const MiningView: React.FC<MiningViewProps> = ({
             <div className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1.5 rounded-2xl border border-slate-800">
               <img src="/logo.png" alt="DCOIN" className="w-5 h-5 rounded-full" />
               <span className="text-base sm:text-lg font-mono font-bold text-amber-300">
-                {miningSession.totalMinedLifetime.toFixed(2)}
+                {(user ? miningSession.totalMinedLifetime : 0).toFixed(2)}
               </span>
               <span className="text-xs text-slate-400 font-semibold">DCOIN</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* NON-LOGGED-IN GATE BANNER */}
+      {!user && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/15 border border-amber-500/40 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-sm">Sign In Required to Start Mining</h3>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Proof-of-Engagement assigns 1 DC every 24h directly to your verified account. Please sign in or register to participate.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenAuthModal}
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Sign In / Register</span>
+          </button>
+        </div>
+      )}
 
       {/* Main Mining Reactor Card */}
       <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-6 shadow-xl relative overflow-hidden">
@@ -254,33 +295,30 @@ export const MiningView: React.FC<MiningViewProps> = ({
             {/* Outer spinning ring */}
             <div
               className={`absolute inset-0 rounded-full border-4 border-dashed transition-all duration-1000 ${
-                miningSession.isActive
+                user && miningSession.isActive
                   ? 'border-amber-400/40 animate-[spin_18s_linear_infinite]'
                   : 'border-slate-800'
               }`}
             />
-
             {/* Glowing background halo */}
             <div
               className={`absolute w-36 h-36 rounded-full blur-xl transition-all duration-700 ${
-                miningSession.isActive ? 'bg-amber-500/25 animate-pulse' : 'bg-slate-800/20'
+                user && miningSession.isActive ? 'bg-amber-500/25 animate-pulse' : 'bg-slate-800/20'
               }`}
             />
-
             {/* Central Coin & Button */}
             <div className="relative z-10 flex flex-col items-center justify-center p-4">
               <img
                 src="/logo.png"
                 alt="Dcoine Logo"
                 className={`w-20 h-20 sm:w-24 sm:h-24 object-contain filter drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] transition-transform duration-500 ${
-                  miningSession.isActive ? 'scale-105 animate-[bounce_4s_ease-in-out_infinite]' : 'opacity-85'
+                  user && miningSession.isActive ? 'scale-105 animate-[bounce_4s_ease-in-out_infinite]' : 'opacity-85'
                 }`}
               />
-
               <div className="mt-2 text-center">
                 <span className="text-xs text-slate-400 font-medium">Session Yield</span>
                 <div className="text-lg sm:text-xl font-bold font-mono text-amber-300">
-                  +{currentSessionMined.toFixed(4)} <span className="text-xs text-amber-400">DCOIN</span>
+                  +{user ? currentSessionMined.toFixed(4) : '0.0000'} <span className="text-xs text-amber-400">DCOIN</span>
                 </div>
               </div>
             </div>
@@ -288,7 +326,7 @@ export const MiningView: React.FC<MiningViewProps> = ({
 
           {/* Countdown & Status */}
           <div className="w-full max-w-sm mt-3 space-y-3">
-            {miningSession.isActive ? (
+            {user && miningSession.isActive ? (
               <>
                 <div className="flex items-center justify-between text-xs text-slate-400 px-1">
                   <span className="flex items-center gap-1 text-emerald-400 font-medium">
@@ -300,7 +338,6 @@ export const MiningView: React.FC<MiningViewProps> = ({
                     {String(timeLeft.seconds).padStart(2, '0')}
                   </span>
                 </div>
-
                 {/* Progress Bar */}
                 <div className="w-full h-2.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
                   <div
@@ -308,7 +345,6 @@ export const MiningView: React.FC<MiningViewProps> = ({
                     style={{ width: `${timeLeft.progress}%` }}
                   />
                 </div>
-
                 {isSessionFinished ? (
                   <button
                     onClick={handleClaim}
@@ -330,7 +366,7 @@ export const MiningView: React.FC<MiningViewProps> = ({
                 className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-extrabold text-sm tracking-wide shadow-lg shadow-amber-500/30 transition transform active:scale-98 inline-flex items-center justify-center gap-2.5 text-center cursor-pointer"
               >
                 <Pickaxe className="w-5 h-5 fill-slate-950 flex-shrink-0" />
-                <span>START 24H MINING SESSION</span>
+                <span>{user ? 'START 24H MINING SESSION' : 'SIGN IN TO START MINING'}</span>
               </button>
             )}
           </div>
@@ -343,7 +379,7 @@ export const MiningView: React.FC<MiningViewProps> = ({
             <span className="text-sm font-bold text-slate-100 font-mono mt-0.5 block">
               1.00 DC
             </span>
-            <span className="text-[10px] text-slate-500">24h = 1 DC ({(1/24).toFixed(4)}/h)</span>
+            <span className="text-[10px] text-slate-500">24h = 1 DC ({(1 / 24).toFixed(4)}/h)</span>
           </div>
 
           <div className="p-3 rounded-2xl bg-slate-950/50 border border-slate-800 text-center">
@@ -393,86 +429,109 @@ export const MiningView: React.FC<MiningViewProps> = ({
         </div>
 
         {/* Shareable Link Generator */}
-        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-3">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <div className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 overflow-hidden">
-              <span className="truncate">{referralLink}</span>
-              <button
-                onClick={handleCopyLink}
-                className="ml-2 text-amber-400 hover:text-amber-300 p-1 flex-shrink-0"
-                title="Copy Link"
-              >
-                {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button>
+        {user ? (
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 overflow-hidden">
+                <span className="truncate">{referralLink}</span>
+                <button
+                  onClick={handleCopyLink}
+                  className="ml-2 text-amber-400 hover:text-amber-300 p-1 flex-shrink-0 cursor-pointer"
+                  title="Copy Link"
+                >
+                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyCode}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-mono text-amber-400 font-semibold cursor-pointer"
+                >
+                  <span>Code: {user.referralCode}</span>
+                  {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCopyCode}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-mono text-amber-400 font-semibold"
-              >
-                <span>Code: {user.referralCode}</span>
-                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
-                onClick={handleShare}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm transition"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>Share</span>
-              </button>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Anyone clicking your link auto-fills your code during registration!</span>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 text-[11px] text-slate-400">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Anyone clicking your link auto-fills your code during registration!</span>
+        ) : (
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-2">
+            <p className="text-xs text-slate-400">
+              Sign in to unlock your personal referral code, shareable link, and live referee team tracking.
+            </p>
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In to View Referral Code</span>
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Referees List */}
-        <div>
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
-            Your Mining Team ({referees.length})
-          </h3>
-          <div className="space-y-2">
-            {referees.map((ref) => (
-              <div
-                key={ref.id}
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-amber-400">
-                    {ref.name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-white">{ref.name}</span>
-                      <span
-                        className={`text-[9px] px-1.5 py-0.2 rounded-full font-medium ${
-                          ref.status === 'active'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-slate-800 text-slate-400'
-                        }`}
-                      >
-                        {ref.status === 'active' ? 'Mining Now' : 'Idle'}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">{ref.email}</span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-xs font-mono font-bold text-amber-300">
-                    +{ref.dcoinEarnedBonus.toFixed(1)} DCOIN
-                  </span>
-                  <span className="block text-[10px] text-slate-500">Tier-1 Bonus</span>
-                </div>
+        {user && (
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+              Your Mining Team ({referees.length})
+            </h3>
+            {referees.length === 0 ? (
+              <div className="p-6 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center text-xs text-slate-500">
+                No referrals yet. Share your code <strong className="text-amber-400">{user.referralCode}</strong> to earn +0.1 DC/24h per active invitee!
               </div>
-            ))}
+            ) : (
+              <div className="space-y-2">
+                {referees.map((ref) => (
+                  <div
+                    key={ref.id}
+                    className="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-amber-400">
+                        {ref.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-semibold text-white">{ref.name}</span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.2 rounded-full font-medium ${
+                              ref.status === 'active'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {ref.status === 'active' ? 'Mining Now' : 'Idle'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{ref.email}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-mono font-bold text-amber-300">
+                        +{ref.dcoinEarnedBonus.toFixed(1)} DCOIN
+                      </span>
+                      <span className="block text-[10px] text-slate-500">Tier-1 Bonus</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

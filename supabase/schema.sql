@@ -440,14 +440,14 @@ commit;
 -- ==============================================================================
 insert into public.tokens (id, symbol, name, network, contract_address, decimals, balance, price_usd, change_24h, icon_url, enabled_in_swap, locked_balance)
 values
-    ('dcoin', 'DCOIN', 'Dcoine Native', 'dcoine', '0x99dc01e74f1791a8291a27e7d90f7790b83e4a01', 18, 245.5, 1.48, 12.6, '/logo.png', true, 48.60),
-    ('eth', 'ETH', 'Ethereum', 'ethereum', null, 18, 1.45, 3450.20, 2.4, null, true, 0.00),
-    ('usdt', 'USDT', 'Tether USD', 'ethereum', '0xdac17f958d2ee523a2206206994597c13d831ec7', 6, 850.0, 1.00, 0.01, null, true, 0.00),
-    ('usdc', 'USDC', 'USD Coin', 'ethereum', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 320.0, 1.00, 0.00, null, true, 0.00),
-    ('bnb', 'BNB', 'BNB Chain', 'bsc', null, 18, 3.2, 590.40, -1.2, null, true, 0.00),
-    ('sol', 'SOL', 'Solana', 'solana', null, 9, 14.5, 178.60, 5.8, null, true, 0.00),
-    ('pol', 'POL', 'Polygon', 'polygon', '0x455e53CBB86018Ac2B8092FdCd39d8444aFF8167', 18, 640.0, 0.52, -0.4, null, true, 0.00),
-    ('arb', 'ARB', 'Arbitrum', 'arbitrum', '0x912CE59144191C1204E64559FE8253a0e49E6548', 18, 480.0, 0.88, 3.1, null, true, 0.00)
+    ('dcoin', 'DCOIN', 'Dcoine Native', 'dcoine', '0x99dc01e74f1791a8291a27e7d90f7790b83e4a01', 18, 0.00, 1.48, 12.6, '/logo.png', true, 0.00),
+    ('eth', 'ETH', 'Ethereum', 'ethereum', null, 18, 0.00, 3450.20, 2.4, null, true, 0.00),
+    ('usdt', 'USDT', 'Tether USD', 'ethereum', '0xdac17f958d2ee523a2206206994597c13d831ec7', 6, 0.00, 1.00, 0.01, null, true, 0.00),
+    ('usdc', 'USDC', 'USD Coin', 'ethereum', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 0.00, 1.00, 0.00, null, true, 0.00),
+    ('bnb', 'BNB', 'BNB Chain', 'bsc', null, 18, 0.00, 590.40, -1.2, null, true, 0.00),
+    ('sol', 'SOL', 'Solana', 'solana', null, 9, 0.00, 178.60, 5.8, null, true, 0.00),
+    ('pol', 'POL', 'Polygon', 'polygon', '0x455e53CBB86018Ac2B8092FdCd39d8444aFF8167', 18, 0.00, 0.52, -0.4, null, true, 0.00),
+    ('arb', 'ARB', 'Arbitrum', 'arbitrum', '0x912CE59144191C1204E64559FE8253a0e49E6548', 18, 0.00, 0.88, 3.1, null, true, 0.00)
 on conflict (id) do nothing;
 
 insert into public.admin_settings (id)

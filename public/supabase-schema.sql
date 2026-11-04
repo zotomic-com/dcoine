@@ -293,12 +293,10 @@ create table if not exists public.admin_settings (
         "customMetaKeywords": "crypto mining, dcoine, p2p crypto, non custodial wallet, dex swap, blockchain"
     }'::jsonb,
     mining_config jsonb not null default '{
-        "baseRatePerHour": 0.041667,
+        "baseRatePerHour": 1.25,
         "sessionDurationHours": 24,
-        "referralBonusRatePerActive": 0.004167,
-        "referral10BonusYield": 1.0,
-        "minWithdrawalDcoin": 10.0,
-        "lockedInNativeWallet": true
+        "referralBonusPercent": 10,
+        "minWithdrawalDcoin": 10.0
     }'::jsonb,
     swap_config jsonb not null default '{
         "enabled": true,
@@ -442,14 +440,14 @@ commit;
 -- ==============================================================================
 insert into public.tokens (id, symbol, name, network, contract_address, decimals, balance, price_usd, change_24h, icon_url, enabled_in_swap, locked_balance)
 values
-    ('dcoin', 'DCOIN', 'Dcoine Native', 'dcoine', '0x99dc01e74f1791a8291a27e7d90f7790b83e4a01', 18, 245.5, 1.48, 12.6, '/logo.png', true, 48.60),
-    ('eth', 'ETH', 'Ethereum', 'ethereum', null, 18, 1.45, 3450.20, 2.4, null, true, 0.00),
-    ('usdt', 'USDT', 'Tether USD', 'ethereum', '0xdac17f958d2ee523a2206206994597c13d831ec7', 6, 850.0, 1.00, 0.01, null, true, 0.00),
-    ('usdc', 'USDC', 'USD Coin', 'ethereum', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 320.0, 1.00, 0.00, null, true, 0.00),
-    ('bnb', 'BNB', 'BNB Chain', 'bsc', null, 18, 3.2, 590.40, -1.2, null, true, 0.00),
-    ('sol', 'SOL', 'Solana', 'solana', null, 9, 14.5, 178.60, 5.8, null, true, 0.00),
-    ('pol', 'POL', 'Polygon', 'polygon', '0x455e53CBB86018Ac2B8092FdCd39d8444aFF8167', 18, 640.0, 0.52, -0.4, null, true, 0.00),
-    ('arb', 'ARB', 'Arbitrum', 'arbitrum', '0x912CE59144191C1204E64559FE8253a0e49E6548', 18, 480.0, 0.88, 3.1, null, true, 0.00)
+    ('dcoin', 'DCOIN', 'Dcoine Native', 'dcoine', '0x99dc01e74f1791a8291a27e7d90f7790b83e4a01', 18, 0.00, 1.48, 12.6, '/logo.png', true, 0.00),
+    ('eth', 'ETH', 'Ethereum', 'ethereum', null, 18, 0.00, 3450.20, 2.4, null, true, 0.00),
+    ('usdt', 'USDT', 'Tether USD', 'ethereum', '0xdac17f958d2ee523a2206206994597c13d831ec7', 6, 0.00, 1.00, 0.01, null, true, 0.00),
+    ('usdc', 'USDC', 'USD Coin', 'ethereum', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 0.00, 1.00, 0.00, null, true, 0.00),
+    ('bnb', 'BNB', 'BNB Chain', 'bsc', null, 18, 0.00, 590.40, -1.2, null, true, 0.00),
+    ('sol', 'SOL', 'Solana', 'solana', null, 9, 0.00, 178.60, 5.8, null, true, 0.00),
+    ('pol', 'POL', 'Polygon', 'polygon', '0x455e53CBB86018Ac2B8092FdCd39d8444aFF8167', 18, 0.00, 0.52, -0.4, null, true, 0.00),
+    ('arb', 'ARB', 'Arbitrum', 'arbitrum', '0x912CE59144191C1204E64559FE8253a0e49E6548', 18, 0.00, 0.88, 3.1, null, true, 0.00)
 on conflict (id) do nothing;
 
 insert into public.admin_settings (id)
@@ -469,74 +467,6 @@ values
     ('dapp-1inch', '1inch Aggregator', 'DEX', 'DeFi / DEX aggregator with automated smart routing across deepest on-chain liquidity pools.', 'https://app.1inch.io', 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40', 'Aggregator', 4.7, 'Multi-Chain'),
     ('dapp-aave', 'Aave Protocol', 'DeFi', 'Decentralized non-custodial liquidity market protocol to earn interest on deposits.', 'https://app.aave.com', 'bg-teal-500/20 text-teal-400 border-teal-500/40', 'Lending', 4.9, 'Ethereum'),
     ('dapp-opensea', 'OpenSea Marketplace', 'NFT', 'Discover, collect, and sell extraordinary Web3 digital collectibles and NFTs.', 'https://opensea.io', 'bg-blue-500/20 text-blue-400 border-blue-500/40', 'NFT', 4.6, 'Multi-Chain')
-on conflict (id) do nothing;
-
--- ==============================================================================
--- 18. PLATFORM COMMISSIONS & FEE TIERS (P2P, Swap, Buy, Sell Rates)
--- ==============================================================================
-create table if not exists public.platform_commission_config (
-    id text primary key default 'global_commissions',
-    is_published boolean not null default true, -- Master toggle for public visibility
-    p2p_buy_rate_percent numeric(5, 2) not null default 0.10,
-    p2p_sell_rate_percent numeric(5, 2) not null default 0.20,
-    swap_buy_rate_percent numeric(5, 2) not null default 0.15,
-    swap_sell_rate_percent numeric(5, 2) not null default 0.15,
-    treasury_wallet_address text not null default '0x71C0F4A972b2c45163D8a0B5d4Ce45Fa91f24A22',
-    discount_token_symbol text not null default 'DCOIN',
-    discount_percent numeric(5, 2) not null default 25.00,
-    updated_at timestamptz not null default now()
-);
-
-create table if not exists public.commission_rules (
-    id text primary key default ('rule_' || gen_random_uuid()),
-    name text not null,
-    category text not null default 'all' check (category in ('all', 'p2p', 'swap')),
-    buy_rate_percent numeric(5, 2) not null default 0.10,
-    sell_rate_percent numeric(5, 2) not null default 0.20,
-    min_fee_usd numeric(10, 4) not null default 0.05,
-    fixed_fee_usd numeric(10, 4) not null default 0.00,
-    description text,
-    is_active boolean not null default true,
-    is_default boolean not null default false,
-    created_at timestamptz not null default now()
-);
-
--- Enable RLS
-alter table public.platform_commission_config enable row level security;
-alter table public.commission_rules enable row level security;
-
--- Commission Policies
-create policy "Allow public read on platform commission config" on public.platform_commission_config
-    for select using (is_published = true);
-
-create policy "Admin full access platform commission config" on public.platform_commission_config
-    for all using (true);
-
-create policy "Allow public read on active commission rules" on public.commission_rules
-    for select using (is_active = true);
-
-create policy "Admin full access commission rules" on public.commission_rules
-    for all using (true);
-
--- Realtime replication
-begin;
-  alter publication supabase_realtime add table public.platform_commission_config;
-  alter publication supabase_realtime add table public.commission_rules;
-commit;
-
--- Seed Data
-insert into public.platform_commission_config (
-    id, is_published, p2p_buy_rate_percent, p2p_sell_rate_percent, swap_buy_rate_percent, swap_sell_rate_percent, treasury_wallet_address, discount_token_symbol, discount_percent
-) values (
-    'global_commissions', true, 0.10, 0.20, 0.15, 0.15, '0x71C0F4A972b2c45163D8a0B5d4Ce45Fa91f24A22', 'DCOIN', 25.00
-) on conflict (id) do nothing;
-
-insert into public.commission_rules (id, name, category, buy_rate_percent, sell_rate_percent, min_fee_usd, fixed_fee_usd, description, is_active, is_default)
-values
-    ('rule-std-global', 'Standard User Tier (Global)', 'all', 0.10, 0.20, 0.05, 0.00, 'Standard platform commission for retail trades and decentralized swaps across all chains.', true, true),
-    ('rule-merchant-p2p', 'Verified Merchant Tier (P2P)', 'p2p', 0.05, 0.10, 0.02, 0.00, 'Preferred low commission for verified merchants maintaining 500+ USDT escrow security pledge.', true, false),
-    ('rule-vip-swap', 'VIP Liquidity Provider (Swap)', 'swap', 0.08, 0.08, 0.01, 0.00, 'Discounted multi-hop swap rate for accounts holding 1,000+ native DCOIN balance.', true, false),
-    ('rule-zero-promo', 'Zero-Fee Promotional Campaign', 'all', 0.00, 0.00, 0.00, 0.00, 'Zero commission promotional campaign tier for community launch events.', false, false)
 on conflict (id) do nothing;
 
 -- ==============================================================================

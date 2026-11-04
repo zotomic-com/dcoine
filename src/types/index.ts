@@ -39,6 +39,7 @@ export interface UserWallet {
   createdAt: number;
   isNative?: boolean; // Platform native DC wallet
   lockedBalance?: number; // Mined DC locked permanently in native wallet
+  isAuthorized?: boolean; // Real Web3 provider authorized
 }
 
 export interface MiningSession {
@@ -68,6 +69,7 @@ export interface UserProfile {
   id: string;
   username: string;
   email: string;
+  password?: string;
   referralCode: string;
   referredBy?: string;
   role: 'user' | 'admin';
@@ -81,6 +83,7 @@ export interface UserProfile {
   preferredCurrency?: string;
   createdAt: number;
   lockedMinedBalance?: number; // Mined DC locked in native platform wallet
+  referees?: Referee[];
 }
 
 export interface P2POrder {

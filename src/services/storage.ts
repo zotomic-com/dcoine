@@ -93,6 +93,7 @@ export const NETWORKS: BlockchainNetwork[] = [
   },
 ];
 
+// Production initial tokens with 0 balance (no fake demo holdings)
 const INITIAL_TOKENS: TokenItem[] = [
   {
     id: 'dcoin',
@@ -101,11 +102,11 @@ const INITIAL_TOKENS: TokenItem[] = [
     network: 'dcoine',
     contractAddress: '0x99dc01e74f1791a8291a27e7d90f7790b83e4a01',
     decimals: 18,
-    balance: 245.5,
+    balance: 0.0,
     priceUsd: 1.48,
     change24h: 12.6,
     iconUrl: '/logo.png',
-    lockedBalance: 48.6, // Mined rewards locked in native DC platform wallet
+    lockedBalance: 0.0,
   },
   {
     id: 'eth',
@@ -113,7 +114,7 @@ const INITIAL_TOKENS: TokenItem[] = [
     name: 'Ethereum',
     network: 'ethereum',
     decimals: 18,
-    balance: 1.45,
+    balance: 0.0,
     priceUsd: 3450.2,
     change24h: 2.4,
   },
@@ -124,7 +125,7 @@ const INITIAL_TOKENS: TokenItem[] = [
     network: 'ethereum',
     contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
     decimals: 6,
-    balance: 850.0,
+    balance: 0.0,
     priceUsd: 1.0,
     change24h: 0.01,
   },
@@ -135,7 +136,7 @@ const INITIAL_TOKENS: TokenItem[] = [
     network: 'ethereum',
     contractAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
     decimals: 6,
-    balance: 320.0,
+    balance: 0.0,
     priceUsd: 1.0,
     change24h: 0.0,
   },
@@ -145,7 +146,7 @@ const INITIAL_TOKENS: TokenItem[] = [
     name: 'BNB Chain',
     network: 'bsc',
     decimals: 18,
-    balance: 2.8,
+    balance: 0.0,
     priceUsd: 594.8,
     change24h: -0.6,
   },
@@ -155,7 +156,7 @@ const INITIAL_TOKENS: TokenItem[] = [
     name: 'Solana',
     network: 'solana',
     decimals: 9,
-    balance: 14.2,
+    balance: 0.0,
     priceUsd: 182.4,
     change24h: 6.8,
   },
@@ -166,110 +167,13 @@ const INITIAL_TOKENS: TokenItem[] = [
     network: 'ethereum',
     contractAddress: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     decimals: 8,
-    balance: 0.065,
+    balance: 0.0,
     priceUsd: 89620.0,
     change24h: 3.5,
   },
 ];
 
-const INITIAL_P2P_ORDERS: P2POrder[] = [
-  {
-    id: 'ord-101',
-    userId: 'merchant-alpha',
-    type: 'sell',
-    merchantName: 'CryptoExpress_Pro',
-    merchantRating: 99.4,
-    completedOrdersCount: 2841,
-    cryptoSymbol: 'USDT',
-    fiatCurrency: 'USD',
-    price: 1.01,
-    minLimit: 50,
-    maxLimit: 3000,
-    availableAmount: 18450,
-    paymentMethods: ['Bank Transfer', 'Zelle', 'Wise'],
-    terms: 'Instant auto-release upon payment receipt. Verified buyers only. No third-party payments.',
-    status: 'active',
-    avgReleaseTimeMinutes: 2.1,
-    createdAt: Date.now() - 3600000 * 5,
-  },
-  {
-    id: 'ord-102',
-    userId: 'merchant-beta',
-    type: 'sell',
-    merchantName: 'DcoineGlobalMerchant',
-    merchantRating: 100,
-    completedOrdersCount: 1540,
-    cryptoSymbol: 'DCOIN',
-    fiatCurrency: 'USD',
-    price: 1.48,
-    minLimit: 20,
-    maxLimit: 5000,
-    availableAmount: 50000,
-    paymentMethods: ['Wise', 'Revolut', 'PayPal'],
-    terms: 'Official Dcoine Ecosystem verified merchant. Fast release with 100% escrow protection.',
-    status: 'active',
-    avgReleaseTimeMinutes: 1.5,
-    createdAt: Date.now() - 3600000 * 2,
-  },
-  {
-    id: 'ord-103',
-    userId: 'merchant-gamma',
-    type: 'buy',
-    merchantName: 'FastPay_Trader',
-    merchantRating: 98.7,
-    completedOrdersCount: 890,
-    cryptoSymbol: 'USDT',
-    fiatCurrency: 'USD',
-    price: 0.99,
-    minLimit: 100,
-    maxLimit: 2000,
-    availableAmount: 8000,
-    paymentMethods: ['Bank Transfer', 'Cash App'],
-    terms: 'Fast cash payout within 5 minutes. Please release escrow once you confirm bank balance.',
-    status: 'active',
-    avgReleaseTimeMinutes: 3.2,
-    createdAt: Date.now() - 3600000 * 8,
-  },
-  {
-    id: 'ord-104',
-    userId: 'merchant-delta',
-    type: 'sell',
-    merchantName: 'Satoshi_Direct',
-    merchantRating: 99.1,
-    completedOrdersCount: 4210,
-    cryptoSymbol: 'BTC',
-    fiatCurrency: 'USD',
-    price: 89800,
-    minLimit: 200,
-    maxLimit: 15000,
-    availableAmount: 1.25,
-    paymentMethods: ['Bank Wire', 'Wise'],
-    terms: 'Institutional grade escrow security. Strictly KYC compliant.',
-    status: 'active',
-    avgReleaseTimeMinutes: 4.0,
-    createdAt: Date.now() - 3600000 * 12,
-  },
-  {
-    id: 'ord-105',
-    userId: 'merchant-eur',
-    type: 'sell',
-    merchantName: 'EuroCrypto_SEPA',
-    merchantRating: 99.8,
-    completedOrdersCount: 3120,
-    cryptoSymbol: 'USDT',
-    fiatCurrency: 'EUR',
-    price: 0.94,
-    minLimit: 50,
-    maxLimit: 4000,
-    availableAmount: 12000,
-    paymentMethods: ['SEPA Instant', 'Revolut'],
-    terms: 'SEPA Instant transfers executed within 60 seconds.',
-    status: 'active',
-    avgReleaseTimeMinutes: 1.8,
-    createdAt: Date.now() - 3600000 * 4,
-  },
-];
-
+// Production initial news without fake comments
 const INITIAL_NEWS: NewsArticle[] = [
   {
     id: 'news-1',
@@ -283,24 +187,7 @@ const INITIAL_NEWS: NewsArticle[] = [
     publishedAt: '2 hours ago',
     readTime: '3 min read',
     likes: 342,
-    comments: [
-      {
-        id: 'c-1',
-        userId: 'u-crypto99',
-        userName: 'Alex_Vance',
-        text: 'Started my 24h session this morning! Hashrate boost with referrals is working smoothly.',
-        timestamp: Date.now() - 3600000,
-        likes: 18,
-      },
-      {
-        id: 'c-2',
-        userId: 'u-blockchain',
-        userName: 'Elena_Web3',
-        text: 'The non-custodial escrow design for P2P is also super clean. Great milestone for Dcoine.',
-        timestamp: Date.now() - 1800000,
-        likes: 9,
-      },
-    ],
+    comments: [],
   },
   {
     id: 'news-2',
@@ -314,16 +201,7 @@ const INITIAL_NEWS: NewsArticle[] = [
     publishedAt: '4 hours ago',
     readTime: '4 min read',
     likes: 512,
-    comments: [
-      {
-        id: 'c-3',
-        userId: 'u-hodl',
-        userName: 'SatoshiFanatic',
-        text: 'Sound money cannot be stopped. Holding strong!',
-        timestamp: Date.now() - 7200000,
-        likes: 24,
-      },
-    ],
+    comments: [],
   },
   {
     id: 'news-3',
@@ -427,6 +305,27 @@ const INITIAL_DAPPS: DAppItem[] = [
   },
 ];
 
+// Production Master Admin Seed
+const MASTER_ADMIN_SEED: UserProfile = {
+  id: 'usr_admin_root',
+  username: 'Admin',
+  email: 'admin@dcoine.network',
+  password: 'admin',
+  referralCode: 'DCOIN-ROOT',
+  role: 'admin',
+  twoFactorEnabled: true,
+  twoFactorSecret: 'JBSWY3DPEHPK3PXP',
+  isMerchant: true,
+  merchantSecurityPledge: 5000,
+  kycStatus: 'verified',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+  country: 'United States',
+  preferredCurrency: 'USD',
+  createdAt: 1700000000000,
+  lockedMinedBalance: 0.0,
+  referees: [],
+};
+
 export class StorageService {
   private static STORAGE_PREFIX = 'dcoine_app_';
 
@@ -447,43 +346,243 @@ export class StorageService {
     }
   }
 
-  // User Profile
-  public static getUser(): UserProfile {
-    const existing = this.getItem<UserProfile | null>('user_profile', null);
-    if (existing) return existing;
+  // ============================================================================
+  // USER ACCOUNTS REGISTRY & AUTHENTICATION
+  // ============================================================================
 
-    const defaultUser: UserProfile = {
-      id: 'usr_main_99',
-      username: 'CryptoExplorer',
-      email: 'user@dcoine.network',
-      referralCode: generateReferralCode('DCOIN'),
+  /**
+   * Get all persistent registered user accounts in system
+   */
+  public static getUsersRegistry(): UserProfile[] {
+    const defaultRegistry = [MASTER_ADMIN_SEED];
+    const saved = this.getItem<UserProfile[]>('users_registry', []);
+    if (!saved || saved.length === 0) {
+      this.setItem('users_registry', defaultRegistry);
+      return defaultRegistry;
+    }
+    // Ensure admin exists
+    if (!saved.some((u) => u.email === 'admin@dcoine.network' || u.role === 'admin')) {
+      saved.unshift(MASTER_ADMIN_SEED);
+      this.setItem('users_registry', saved);
+    }
+    return saved;
+  }
+
+  public static saveUsersRegistry(registry: UserProfile[]): void {
+    this.setItem('users_registry', registry);
+  }
+
+  /**
+   * Active User Session: null when logged out (guest)
+   */
+  public static getUser(): UserProfile | null {
+    return this.getItem<UserProfile | null>('active_user', null);
+  }
+
+  public static saveUser(user: UserProfile | null): void {
+    this.setItem('active_user', user);
+    if (user) {
+      // Also sync user profile into registry
+      const registry = this.getUsersRegistry();
+      const updatedRegistry = registry.map((u) => (u.id === user.id ? user : u));
+      if (!updatedRegistry.some((u) => u.id === user.id)) {
+        updatedRegistry.push(user);
+      }
+      this.saveUsersRegistry(updatedRegistry);
+    }
+  }
+
+  /**
+   * Register a new user account with MANDATORY referral attribution
+   */
+  public static registerUser(payload: {
+    username: string;
+    email: string;
+    password?: string;
+    referralCode: string;
+  }): { success: boolean; user?: UserProfile; error?: string } {
+    const registry = this.getUsersRegistry();
+    const cleanEmail = payload.email.trim().toLowerCase();
+    const cleanUsername = payload.username.trim();
+    const cleanRefCode = payload.referralCode.trim().toUpperCase();
+
+    // Check if user already exists
+    if (registry.some((u) => u.email.toLowerCase() === cleanEmail)) {
+      return { success: false, error: 'An account with this email address already exists. Please sign in.' };
+    }
+    if (registry.some((u) => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
+      return { success: false, error: 'Username is already taken. Please choose another username.' };
+    }
+
+    // MANDATORY REFERRAL CHECK: Look up referrer in registry
+    let referrerUser: UserProfile | null = null;
+    if (cleanRefCode) {
+      referrerUser = registry.find((u) => u.referralCode.toUpperCase() === cleanRefCode) || null;
+    }
+
+    if (!referrerUser && cleanRefCode !== 'DCOIN-MAIN') {
+      return {
+        success: false,
+        error: `Referral code "${cleanRefCode}" is invalid. Please provide a valid inviter's referral code to join the mining pool.`,
+      };
+    }
+
+    // Generate unique referral code for this new user
+    let newReferralCode = generateReferralCode('DCOIN');
+    while (registry.some((u) => u.referralCode === newReferralCode)) {
+      newReferralCode = generateReferralCode('DCOIN');
+    }
+
+    const newUser: UserProfile = {
+      id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      username: cleanUsername,
+      email: cleanEmail,
+      password: payload.password?.trim() || 'password',
+      referralCode: newReferralCode,
+      referredBy: referrerUser ? referrerUser.referralCode : cleanRefCode,
       role: 'user',
       twoFactorEnabled: false,
       twoFactorSecret: 'JBSWY3DPEHPK3PXP',
       isMerchant: false,
       merchantSecurityPledge: 0,
       kycStatus: 'verified',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+      avatarUrl: `https://images.unsplash.com/photo-${1535713875002 + (registry.length % 500)}?auto=format&fit=crop&w=200&q=80`,
       country: 'United States',
       preferredCurrency: 'USD',
-      createdAt: Date.now() - 86400000 * 14,
-      lockedMinedBalance: 48.6, // Native platform locked mined DC
+      createdAt: Date.now(),
+      lockedMinedBalance: 0.0,
+      referees: [],
     };
-    this.setItem('user_profile', defaultUser);
-    return defaultUser;
+
+    // If referrer was found, credit the referral directly into referrer's account!
+    if (referrerUser) {
+      const newRefereeEntry: Referee = {
+        id: `ref-${newUser.id}`,
+        name: newUser.username,
+        email: newUser.email,
+        joinedAt: Date.now(),
+        status: 'active',
+        dcoinEarnedBonus: 0.0,
+      };
+
+      const referrerReferees = referrerUser.referees || [];
+      referrerUser.referees = [newRefereeEntry, ...referrerReferees];
+
+      // Add a system notification for the referrer
+      this.addNotification({
+        recipientRole: 'user',
+        userId: referrerUser.id,
+        title: 'New Referee Joined Your Mining Pool!',
+        message: `${newUser.username} registered using your referral code ${referrerUser.referralCode}. Your 24h mining hashrate bonus increased!`,
+        type: 'success',
+        linkTab: 'mining',
+        isRead: false,
+      });
+
+      // Update referrer in registry
+      const updatedRegistry = registry.map((u) => (u.id === referrerUser!.id ? referrerUser! : u));
+      updatedRegistry.push(newUser);
+      this.saveUsersRegistry(updatedRegistry);
+    } else {
+      registry.push(newUser);
+      this.saveUsersRegistry(registry);
+    }
+
+    // Set active user session
+    this.saveUser(newUser);
+
+    // Initialize fresh native wallet for this user with 0 balance
+    const userWallet: UserWallet = {
+      id: `w-${newUser.id}`,
+      name: `${newUser.username}'s Dcoine Vault`,
+      address: generateAddress(),
+      mnemonicPhrase: generateMnemonic(),
+      privateKey: generatePrivateKey(),
+      network: 'dcoine',
+      isNative: true,
+      lockedBalance: 0.0,
+      createdAt: Date.now(),
+    };
+    this.saveWallets([userWallet]);
+
+    // Initialize fresh 0-balance mining session
+    this.saveMiningSession({
+      isActive: false,
+      startTime: null,
+      endTime: null,
+      baseRatePerHour: parseFloat((1 / 24).toFixed(6)),
+      boostMultiplier: 1.0,
+      currentSessionMined: 0,
+      totalMinedLifetime: 0,
+      lastClaimTime: null,
+      consecutiveDays: 0,
+      referralRatePerActiveRef: parseFloat((0.1 / 24).toFixed(6)),
+      lockedMinedBalance: 0,
+    });
+
+    return { success: true, user: newUser };
   }
 
-  public static saveUser(user: UserProfile): void {
-    this.setItem('user_profile', user);
+  /**
+   * Log in an existing user or admin
+   */
+  public static loginUser(
+    emailOrUsername: string,
+    password?: string
+  ): { success: boolean; user?: UserProfile; error?: string } {
+    const registry = this.getUsersRegistry();
+    const query = emailOrUsername.trim().toLowerCase();
+
+    const matchedUser = registry.find(
+      (u) => u.email.toLowerCase() === query || u.username.toLowerCase() === query
+    );
+
+    if (!matchedUser) {
+      return { success: false, error: 'No account found with this username or email.' };
+    }
+
+    if (password && matchedUser.password && matchedUser.password !== password.trim()) {
+      return { success: false, error: 'Incorrect password. Please try again.' };
+    }
+
+    this.saveUser(matchedUser);
+
+    // Broadcast session update
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('dcoine_session_bus');
+        bc.postMessage({ type: 'USER_LOGGED_IN', user: matchedUser });
+        setTimeout(() => bc.close(), 100);
+      }
+    } catch {}
+
+    return { success: true, user: matchedUser };
   }
 
-  // Wallets
+  /**
+   * Log out active user and reset session
+   */
+  public static logoutUser(): void {
+    localStorage.removeItem(this.STORAGE_PREFIX + 'active_user');
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('dcoine_session_bus');
+        bc.postMessage({ type: 'USER_LOGGED_OUT' });
+        setTimeout(() => bc.close(), 100);
+      }
+    } catch {}
+  }
+
+  // ============================================================================
+  // WALLETS (Zero Demo Balances)
+  // ============================================================================
+
   public static getWallets(): UserWallet[] {
     const existing = this.getItem<UserWallet[]>('user_wallets', []);
     if (existing.length > 0) return existing;
 
-    const defaultMnemonic = generateMnemonic();
     const defaultAddress = generateAddress();
+    const defaultMnemonic = generateMnemonic();
     const defaultPrivateKey = generatePrivateKey();
 
     const initialWallets: UserWallet[] = [
@@ -494,18 +593,9 @@ export class StorageService {
         mnemonicPhrase: defaultMnemonic,
         privateKey: defaultPrivateKey,
         network: 'dcoine',
-        isNative: true, // Native DC platform wallet
-        lockedBalance: 48.6, // Mined DC locked permanently in native wallet
-        createdAt: Date.now() - 86400000 * 14,
-      },
-      {
-        id: 'w-trading',
-        name: 'Trading & P2P Wallet',
-        address: generateAddress(),
-        mnemonicPhrase: generateMnemonic(),
-        privateKey: generatePrivateKey(),
-        network: 'ethereum',
-        createdAt: Date.now() - 86400000 * 7,
+        isNative: true,
+        lockedBalance: 0.0,
+        createdAt: Date.now(),
       },
     ];
     this.setItem('user_wallets', initialWallets);
@@ -519,14 +609,14 @@ export class StorageService {
   // Active Network
   public static getActiveNetwork(): BlockchainNetwork {
     const netId = this.getItem<string>('active_network_id', 'dcoine');
-    return NETWORKS.find(n => n.id === netId) || NETWORKS[0];
+    return NETWORKS.find((n) => n.id === netId) || NETWORKS[0];
   }
 
   public static setActiveNetwork(networkId: string): void {
     this.setItem('active_network_id', networkId);
   }
 
-  // Tokens
+  // Tokens (All initial balances 0)
   public static getTokens(): TokenItem[] {
     return this.getItem<TokenItem[]>('tokens_list', INITIAL_TOKENS);
   }
@@ -535,20 +625,23 @@ export class StorageService {
     this.setItem('tokens_list', tokens);
   }
 
-  // Mining Session
+  // ============================================================================
+  // MINING SESSION (Zero Demo Mined Lifetime)
+  // ============================================================================
+
   public static getMiningSession(): MiningSession {
     const defaultSession: MiningSession = {
       isActive: false,
       startTime: null,
       endTime: null,
-      baseRatePerHour: parseFloat((1 / 24).toFixed(6)), // 24h = 1 DC (1/24 = 0.041667 DC/hr)
-      boostMultiplier: 1.30, // 3 active referees * 0.1 DC/24h = +0.3 DC/24h
+      baseRatePerHour: parseFloat((1 / 24).toFixed(6)), // 24h = 1 DC
+      boostMultiplier: 1.0,
       currentSessionMined: 0,
-      totalMinedLifetime: 48.6,
+      totalMinedLifetime: 0.0,
       lastClaimTime: null,
-      consecutiveDays: 3,
-      referralRatePerActiveRef: parseFloat((0.1 / 24).toFixed(6)), // 10 active refs = 1 DC / 24h (0.1 DC/24h per active ref)
-      lockedMinedBalance: 48.6,
+      consecutiveDays: 0,
+      referralRatePerActiveRef: parseFloat((0.1 / 24).toFixed(6)),
+      lockedMinedBalance: 0.0,
     };
     return this.getItem<MiningSession>('mining_session', defaultSession);
   }
@@ -557,59 +650,39 @@ export class StorageService {
     this.setItem('mining_session', session);
   }
 
-  // Referrals
+  // ============================================================================
+  // REFERRALS (Linked to active user)
+  // ============================================================================
+
   public static getReferees(): Referee[] {
-    const defaultReferees: Referee[] = [
-      {
-        id: 'ref-1',
-        name: 'Sarah_K',
-        email: 'sarah.k@gmail.com',
-        joinedAt: Date.now() - 86400000 * 4,
-        status: 'active',
-        dcoinEarnedBonus: 12.4,
-      },
-      {
-        id: 'ref-2',
-        name: 'David_Miller',
-        email: 'd.miller@web3.io',
-        joinedAt: Date.now() - 86400000 * 8,
-        status: 'active',
-        dcoinEarnedBonus: 18.2,
-      },
-      {
-        id: 'ref-3',
-        name: 'Crypto_Zen',
-        email: 'zen.crypto@proton.me',
-        joinedAt: Date.now() - 86400000 * 11,
-        status: 'active',
-        dcoinEarnedBonus: 24.5,
-      },
-      {
-        id: 'ref-4',
-        name: 'Lucas_B',
-        email: 'lucas.eth@yahoo.com',
-        joinedAt: Date.now() - 86400000 * 13,
-        status: 'idle',
-        dcoinEarnedBonus: 6.8,
-      },
-    ];
-    return this.getItem<Referee[]>('referees_list', defaultReferees);
+    const user = this.getUser();
+    if (!user) return [];
+    // Read from user in registry
+    const registry = this.getUsersRegistry();
+    const liveUser = registry.find((u) => u.id === user.id);
+    return liveUser?.referees || user.referees || [];
   }
 
   public static saveReferees(referees: Referee[]): void {
-    this.setItem('referees_list', referees);
+    const user = this.getUser();
+    if (user) {
+      user.referees = referees;
+      this.saveUser(user);
+    }
   }
 
-  // P2P Orders
+  // ============================================================================
+  // P2P ORDERS & TRADES (Zero Fake Demo Orders)
+  // ============================================================================
+
   public static getP2POrders(): P2POrder[] {
-    return this.getItem<P2POrder[]>('p2p_orders', INITIAL_P2P_ORDERS);
+    return this.getItem<P2POrder[]>('p2p_orders', []);
   }
 
   public static saveP2POrders(orders: P2POrder[]): void {
     this.setItem('p2p_orders', orders);
   }
 
-  // P2P Trades / Escrows
   public static getP2PTrades(): P2PTrade[] {
     return this.getItem<P2PTrade[]>('p2p_trades', []);
   }
@@ -618,53 +691,12 @@ export class StorageService {
     this.setItem('p2p_trades', trades);
   }
 
-  // Transactions
+  // ============================================================================
+  // TRANSACTIONS (Clean Empty State)
+  // ============================================================================
+
   public static getTransactions(): TransactionRecord[] {
-    const defaultTxs: TransactionRecord[] = [
-      {
-        id: 'tx-01',
-        type: 'mine',
-        symbol: 'DCOIN',
-        amount: 30.0,
-        network: 'dcoine',
-        hash: '0x9fa4b2e817c6e0018a99cde3194a02be9761e05a8d90',
-        status: 'completed',
-        timestamp: Date.now() - 86400000 * 1,
-      },
-      {
-        id: 'tx-02',
-        type: 'swap',
-        symbol: 'USDT',
-        amount: 250.0,
-        network: 'dcoine',
-        hash: '0x7b1c4e912384a9ff001cda87204918ef12847a9e1029',
-        status: 'completed',
-        timestamp: Date.now() - 86400000 * 2,
-        fee: 0.15,
-      },
-      {
-        id: 'tx-03',
-        type: 'p2p_buy',
-        symbol: 'USDT',
-        amount: 100.0,
-        fiatValue: 101.0,
-        network: 'ethereum',
-        hash: '0x33441a98701fe0238194ad8291a0219488bcda819024',
-        status: 'completed',
-        timestamp: Date.now() - 86400000 * 3,
-      },
-      {
-        id: 'tx-04',
-        type: 'referral',
-        symbol: 'DCOIN',
-        amount: 5.25,
-        network: 'dcoine',
-        hash: '0x12f45ea9810a4738cb201940129fca98102391023a81',
-        status: 'completed',
-        timestamp: Date.now() - 86400000 * 4,
-      },
-    ];
-    return this.getItem<TransactionRecord[]>('transactions_history', defaultTxs);
+    return this.getItem<TransactionRecord[]>('transactions_history', []);
   }
 
   public static addTransaction(tx: TransactionRecord): void {
@@ -766,7 +798,6 @@ export class StorageService {
       swapConfig: this.DEFAULT_SWAP_CONFIG,
     };
     const loaded = this.getItem<AdminSettings>('admin_settings', defaultSettings);
-    // Ensure swapConfig exists if loaded from older local storage
     if (!loaded.swapConfig) {
       loaded.swapConfig = this.DEFAULT_SWAP_CONFIG;
     }
@@ -777,7 +808,6 @@ export class StorageService {
     this.setItem('admin_settings', settings);
   }
 
-  // Swap Config Quick Helpers
   public static getSwapConfig(): SwapConfig {
     return this.getAdminSettings().swapConfig || this.DEFAULT_SWAP_CONFIG;
   }
@@ -791,6 +821,7 @@ export class StorageService {
   // ============================================================================
   // ANNOUNCEMENTS & TICKER BAR
   // ============================================================================
+
   private static DEFAULT_ANNOUNCEMENTS: AnnouncementItem[] = [
     {
       id: 'ann-1',
@@ -825,8 +856,8 @@ export class StorageService {
   ];
 
   private static DEFAULT_ANNOUNCEMENT_SETTINGS: AnnouncementSettings = {
-    isPublished: true, // published by default across all pages
-    speedSeconds: 55, // slower, relaxed scroll speed for easy readability
+    isPublished: true,
+    speedSeconds: 55,
     allowDismiss: true,
   };
 
@@ -847,7 +878,6 @@ export class StorageService {
 
   public static getAnnouncementSettings(): AnnouncementSettings {
     const settings = this.getItem<AnnouncementSettings>('announcement_settings', this.DEFAULT_ANNOUNCEMENT_SETTINGS);
-    // If previously saved with fast speed (e.g. <= 28s), upgrade to slower comfortable 55s
     if (settings && (!settings.speedSeconds || settings.speedSeconds < 40)) {
       settings.speedSeconds = 55;
       this.setItem('announcement_settings', settings);
@@ -869,6 +899,7 @@ export class StorageService {
   // ============================================================================
   // NOTIFICATIONS (User & Admin)
   // ============================================================================
+
   private static DEFAULT_NOTIFICATIONS: AppNotification[] = [
     {
       id: 'notif-1',
@@ -900,26 +931,6 @@ export class StorageService {
       isRead: true,
       createdAt: Date.now() - 86400000,
     },
-    {
-      id: 'notif-4',
-      recipientRole: 'admin',
-      title: 'Admin Security Health Check',
-      message: 'All 7 network RPC endpoints and smart escrow routers are operational. 2FA protection active.',
-      type: 'alert',
-      linkTab: 'admin',
-      isRead: false,
-      createdAt: Date.now() - 3600000 * 6,
-    },
-    {
-      id: 'notif-5',
-      recipientRole: 'admin',
-      title: 'New Merchant Application Submitted',
-      message: 'A user requested Verified Merchant Desk status with 500 USDT escrow pledge pending review.',
-      type: 'success',
-      linkTab: 'admin',
-      isRead: false,
-      createdAt: Date.now() - 86400000 * 2,
-    },
   ];
 
   public static getNotifications(): AppNotification[] {
@@ -941,7 +952,7 @@ export class StorageService {
     const list = this.getNotifications();
     const newNotif: AppNotification = {
       ...notif,
-      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: Date.now(),
     };
     this.saveNotifications([newNotif, ...list]);
@@ -950,24 +961,25 @@ export class StorageService {
   // ============================================================================
   // PLATFORM COMMISSION & FEE ENGINE (P2P, Swap, Buy, Sell)
   // ============================================================================
+
   private static DEFAULT_COMMISSION_CONFIG: PlatformCommissionConfig = {
-    isPublished: true, // Master toggle: publish or hide commission rates across pages
-    p2pBuyRatePercent: 0.10, // 0.10% buy commission for P2P escrow
-    p2pSellRatePercent: 0.20, // 0.20% sell commission for P2P escrow
-    swapBuyRatePercent: 0.15, // 0.15% buy/pay commission for DEX swap
-    swapSellRatePercent: 0.15, // 0.15% sell/receive commission for DEX swap
+    isPublished: true,
+    p2pBuyRatePercent: 0.1,
+    p2pSellRatePercent: 0.2,
+    swapBuyRatePercent: 0.15,
+    swapSellRatePercent: 0.15,
     treasuryWalletAddress: '0x71C0F4A972b2c45163D8a0B5d4Ce45Fa91f24A22',
     discountTokenSymbol: 'DCOIN',
-    discountPercent: 25, // 25% discount if fees paid in native DCOIN
+    discountPercent: 25,
     rules: [
       {
         id: 'rule-std-global',
         name: 'Standard User Tier (Global)',
         category: 'all',
-        buyRatePercent: 0.10,
-        sellRatePercent: 0.20,
+        buyRatePercent: 0.1,
+        sellRatePercent: 0.2,
         minFeeUsd: 0.05,
-        fixedFeeUsd: 0.00,
+        fixedFeeUsd: 0.0,
         description: 'Standard platform commission for retail trades and decentralized swaps across all chains.',
         isActive: true,
         isDefault: true,
@@ -978,39 +990,13 @@ export class StorageService {
         name: 'Verified Merchant Tier (P2P)',
         category: 'p2p',
         buyRatePercent: 0.05,
-        sellRatePercent: 0.10,
+        sellRatePercent: 0.1,
         minFeeUsd: 0.02,
-        fixedFeeUsd: 0.00,
+        fixedFeeUsd: 0.0,
         description: 'Preferred low commission for verified merchants maintaining 500+ USDT escrow security pledge.',
         isActive: true,
         isDefault: false,
         createdAt: Date.now() - 86400000 * 8,
-      },
-      {
-        id: 'rule-vip-swap',
-        name: 'VIP Liquidity Provider (Swap)',
-        category: 'swap',
-        buyRatePercent: 0.08,
-        sellRatePercent: 0.08,
-        minFeeUsd: 0.01,
-        fixedFeeUsd: 0.00,
-        description: 'Discounted multi-hop swap rate for accounts holding 1,000+ native DCOIN balance.',
-        isActive: true,
-        isDefault: false,
-        createdAt: Date.now() - 86400000 * 5,
-      },
-      {
-        id: 'rule-zero-promo',
-        name: 'Zero-Fee Promotional Campaign',
-        category: 'all',
-        buyRatePercent: 0.00,
-        sellRatePercent: 0.00,
-        minFeeUsd: 0.00,
-        fixedFeeUsd: 0.00,
-        description: 'Zero commission promotional campaign tier for community launch events.',
-        isActive: false,
-        isDefault: false,
-        createdAt: Date.now() - 86400000 * 2,
       },
     ],
   };
