@@ -175,8 +175,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Proceed to mandatory 2-Step Authenticator verification
-    setMode('admin_step2');
+    // 2FA disabled for now; log in directly
+    StorageService.saveUser(result.user);
+    onLoginSuccess(result.user, true);
+    onClose();
+    confetti({ particleCount: 80, spread: 80 });
   };
 
   // Handle Admin Portal Step 2 (Google Authenticator TOTP)
