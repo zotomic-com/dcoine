@@ -15,6 +15,8 @@ import { ExplorerView } from './components/ExplorerView';
 import { DashboardView } from './components/DashboardView';
 import { GuestHomeView } from './components/GuestHomeView';
 import { AdminView } from './components/AdminView';
+import { AdminDashboard } from './components/AdminDashboard';
+import { AdminSidebar } from './components/AdminSidebar';
 import { AuthModal } from './components/AuthModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { AnnouncementTicker } from './components/AnnouncementTicker';
@@ -52,6 +54,8 @@ export default function App() {
     const active = StorageService.getUser();
     return active?.role === 'admin';
   });
+  const [isAdminSidebarOpen, setIsAdminSidebarOpen] = useState(false);
+  const [adminSection, setAdminSection] = useState('dashboard');
 
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => StorageService.getNotifications());
@@ -220,6 +224,7 @@ export default function App() {
         }}
         onLogout={handleLogout}
         onToggleAdmin={handleToggleAdmin}
+        onOpenAdminSidebar={() => setIsAdminSidebarOpen(true)}
         isAdminMode={isAdminMode}
         unreadNotificationsCount={unreadNotificationsCount}
         onOpenNotifications={() => setNotificationModalOpen(true)}
@@ -354,7 +359,7 @@ export default function App() {
 
         {/* ADMIN VIEW - STRICTLY DISCLOSED ONLY TO AUTHENTICATED ADMINS */}
         {currentTab === 'admin' && user?.role === 'admin' && (
-          <AdminView
+          adminSection === 'dashboard' ? <AdminDashboard /> : <AdminView
             onExitAdmin={() => {
               setIsAdminMode(false);
               setCurrentTab('dashboard');
@@ -408,6 +413,15 @@ export default function App() {
           handleTabChange(tab as any);
         }}
       />
+      {/* Admin Sidebar */}
+      {isAdminMode && (
+        <AdminSidebar
+          open={isAdminSidebarOpen}
+          onClose={() => setIsAdminSidebarOpen(false)}
+          onNavigate={(section) => { setAdminSection(section); setIsAdminSidebarOpen(false); }}
+          onLogout={() => { setIsAdminMode(false); setIsAdminSidebarOpen(false); }}
+        />
+      )}
     </div>
   );
 }

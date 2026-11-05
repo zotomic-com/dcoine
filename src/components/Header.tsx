@@ -28,6 +28,7 @@ interface HeaderProps {
   onOpenProfile: () => void;
   onLogout: () => void;
   onToggleAdmin: () => void;
+  onOpenAdminSidebar?: () => void;
   isAdminMode: boolean;
   onOpenNotifications?: () => void;
   unreadNotificationsCount?: number;
@@ -43,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfile,
   onLogout,
   onToggleAdmin,
+  onOpenAdminSidebar,
   isAdminMode,
   onOpenNotifications,
   unreadNotificationsCount = 0,
@@ -226,7 +228,14 @@ export const Header: React.FC<HeaderProps> = ({
                   <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
                 ) : (
                   user.username.slice(0, 1).toUpperCase()
-                )}
+           )}
+ 
+           {/* ADMIN SIDEBAR TOGGLE */}
+           {isAdminMode && onOpenAdminSidebar && (
+             <button onClick={onOpenAdminSidebar} className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 flex-shrink-0" title="Admin Panel">
+               <ShieldCheck className="w-3.5 h-3.5" />
+             </button>
+           )}
               </div>
               <span className="hidden md:inline text-xs font-semibold text-slate-200 max-w-[80px] truncate">
                 {user.username}
