@@ -72,7 +72,7 @@ export interface UserProfile {
   password?: string;
   referralCode: string;
   referredBy?: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'merchant';
   twoFactorEnabled: boolean;
   twoFactorSecret?: string;
   isMerchant: boolean;
@@ -84,6 +84,11 @@ export interface UserProfile {
   createdAt: number;
   lockedMinedBalance?: number; // Mined DC locked in native platform wallet
   referees?: Referee[];
+  phone?: string;
+  status?: 'active' | 'suspended';
+  isLoggedIn?: boolean;
+  lastLogin?: number;
+  walletBalance?: number;
 }
 
 export interface P2POrder {
@@ -104,6 +109,17 @@ export interface P2POrder {
   status: 'active' | 'paused' | 'completed' | 'cancelled';
   avgReleaseTimeMinutes: number;
   createdAt: number;
+  merchantEmail?: string;
+  merchantPhone?: string;
+  location?: string;
+  country?: string;
+  ipAddress?: string;
+  buyerName?: string;
+  buyerEmail?: string;
+  buyerPhone?: string;
+  sellerName?: string;
+  sellerEmail?: string;
+  sellerPhone?: string;
 }
 
 export interface P2PTrade {
@@ -138,13 +154,104 @@ export interface TransactionRecord {
   symbol: string;
   amount: number;
   fiatValue?: number;
-  network: NetworkId;
+  network: NetworkId | string;
   hash: string;
   from?: string;
   to?: string;
   status: 'completed' | 'pending' | 'failed';
   timestamp: number;
   fee?: number;
+  fromUserName?: string;
+  fromUserEmail?: string;
+  toUserName?: string;
+  toUserEmail?: string;
+  blockNumber?: number;
+  gasUsed?: string;
+}
+
+export interface RevenueRecord {
+  id: string;
+  type: 'p2p_sell' | 'swap_sell' | 'ad_revenue';
+  title: string;
+  grossAmount: number;
+  platformFeeAmount: number;
+  feeRatePercent: number;
+  currency: string;
+  timestamp: number;
+  status: 'credited' | 'settled' | 'pending';
+  sourceDetails: {
+    tradeId?: string;
+    txHash?: string;
+    network?: string;
+    adNetwork?: string;
+    userOrMerchant?: string;
+    impressionCount?: number;
+  };
+}
+
+export interface FullSiteSettings {
+  siteName: string;
+  siteUrl: string;
+  supportEmail: string;
+  supportTelegram: string;
+  supportPhone: string;
+  maintenanceMode: boolean;
+  maintenanceNotice: string;
+  baseMiningRate: number;
+  sessionDurationHours: number;
+  minWithdrawalDcoin: number;
+  referralMiningBonusPercent: number;
+  minDepositUsd: number;
+  maxDepositUsd: number;
+  minWithdrawalUsd: number;
+  dailyWithdrawalLimitUsd: number;
+  gasMultiplier: number;
+  swapFeePercent: number;
+  p2pSellFeePercent: number;
+  treasuryWalletAddress: string;
+  enforce2FaWithdrawals: boolean;
+  enforceKycP2P: boolean;
+  autoFreezeSuspicious: boolean;
+}
+
+export interface IntegrationSettings {
+  geminiApiKey: string;
+  rpcDcoineEndpoint: string;
+  etherscanApiKey: string;
+  bscscanApiKey: string;
+  polygonRpc: string;
+  solanaRpc: string;
+  coinGeckoApiKey: string;
+  webhookUrl: string;
+  webhookSecret: string;
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
+  ogImageUrl: string;
+  twitterHandle: string;
+  canonicalUrl: string;
+  robotsTxt: string;
+  googleAnalyticsId: string;
+  metaPixelId: string;
+  tikTokPixelId: string;
+  googleTagManagerId: string;
+  adSensePublisherId: string;
+  enableHeaderBanner: boolean;
+  enableSidebarBanner: boolean;
+  enableMiningBanner: boolean;
+  simulatedAdsRevenueUsd: number;
+}
+
+export interface AdminProfileSettings {
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  country: string;
+  avatarUrl: string;
+  roleTitle: string;
+  twoFactorEnabled: boolean;
+  twoFactorSecret: string;
 }
 
 export interface NewsComment {
@@ -304,5 +411,124 @@ export interface AppNotification {
   linkTab?: string;
   isRead: boolean;
   createdAt: number;
+}
+
+export type EmployeeRole = 'manager' | 'moderator';
+export type EmployeeStatus = 'active' | 'suspended' | 'on_leave';
+
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: EmployeeRole;
+  department: string;
+  avatarUrl: string;
+  status: EmployeeStatus;
+  permissions: string[];
+  assignedTicketsCount: number;
+  actionsCount: number;
+  lastActive: number;
+  joinedAt: number;
+  notes?: string;
+}
+
+export interface EmployeeActivityLog {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeRole: EmployeeRole;
+  actionType:
+    | 'kyc_approved'
+    | 'kyc_rejected'
+    | 'p2p_escrow_released'
+    | 'user_banned'
+    | 'dispute_resolved'
+    | 'cms_article_published'
+    | 'ticker_updated'
+    | 'suspicious_flagged'
+    | 'refund_approved'
+    | 'login';
+  actionTitle: string;
+  targetDetails: string;
+  ipAddress: string;
+  timestamp: number;
+  status: 'success' | 'flagged' | 'pending_review';
+  notes?: string;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  category: 'general' | 'mining' | 'wallet' | 'p2p' | 'security';
+  order: number;
+  isPublished: boolean;
+  updatedAt: number;
+}
+
+export interface CMSHeroContent {
+  headline: string;
+  highlightWord: string;
+  subheadline: string;
+  primaryCtaText: string;
+  secondaryCtaText: string;
+  badgeText: string;
+  promoBannerText: string;
+  isBannerActive: boolean;
+  stats: Array<{ label: string; value: string }>;
+}
+
+export type PageBlockType = 'text' | 'hero' | 'image' | 'video' | 'feature_grid' | 'cta' | 'html';
+export type PageAlignment = 'left' | 'center' | 'right';
+export type PageContainerWidth = 'narrow' | 'medium' | 'wide' | 'full';
+export type PagePadding = 'compact' | 'normal' | 'relaxed' | 'spacious';
+export type PageBgTheme = 'slate_dark' | 'slate_card' | 'amber_subtle' | 'midnight_gradient' | 'transparent';
+export type PageAccentColor = 'amber' | 'emerald' | 'blue' | 'purple';
+
+export interface CMSPageBlock {
+  id: string;
+  type: PageBlockType;
+  heading?: string;
+  subheading?: string;
+  text?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
+  videoUrl?: string; // YouTube, Vimeo, or MP4 URL
+  ctaText?: string;
+  ctaUrl?: string;
+  alignment: PageAlignment;
+  containerWidth: PageContainerWidth;
+  paddingY: PagePadding;
+  bgTheme: PageBgTheme;
+  accentColor: PageAccentColor;
+  hasBorder?: boolean;
+}
+
+export interface CMSPageSEO {
+  metaTitle: string;
+  metaDescription: string;
+  tags: string[];
+  ogTitle: string;
+  ogDescription: string;
+  ogImageUrl: string;
+  canonicalUrl: string;
+  robotsDirective: 'index, follow' | 'noindex, nofollow' | 'noindex, follow';
+  schemaType: 'WebPage' | 'Article' | 'AboutPage' | 'FAQPage' | 'ContactPage';
+}
+
+export interface CMSPage {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  isPublished: boolean;
+  createdAt: number;
+  updatedAt: number;
+  author?: string;
+  blocks: CMSPageBlock[];
+  seo: CMSPageSEO;
+  isSystemPage?: boolean;
 }
 

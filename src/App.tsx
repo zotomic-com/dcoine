@@ -17,6 +17,7 @@ import { GuestHomeView } from './components/GuestHomeView';
 import { AdminView } from './components/AdminView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminSidebar } from './components/AdminSidebar';
+import { UserSidebar } from './components/UserSidebar';
 import { AuthModal } from './components/AuthModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { AnnouncementTicker } from './components/AnnouncementTicker';
@@ -55,6 +56,7 @@ export default function App() {
     return active?.role === 'admin';
   });
   const [isAdminSidebarOpen, setIsAdminSidebarOpen] = useState(false);
+  const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
   const [adminSection, setAdminSection] = useState('dashboard');
 
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -166,6 +168,8 @@ export default function App() {
     StorageService.logoutUser();
     setUser(null);
     setIsAdminMode(false);
+    setIsAdminSidebarOpen(false);
+    setIsUserSidebarOpen(false);
     setCurrentTab('dashboard');
   };
 
@@ -224,7 +228,21 @@ export default function App() {
         }}
         onLogout={handleLogout}
         onToggleAdmin={handleToggleAdmin}
-        onOpenAdminSidebar={() => setIsAdminSidebarOpen(true)}
+        onOpenAdminSidebar={() => {
+          if (isAdminMode && user?.role === 'admin') {
+            setIsAdminSidebarOpen(true);
+          } else if (user) {
+            setIsUserSidebarOpen(true);
+          }
+        }}
+        onToggleAdminSidebar={() => {
+          if (isAdminMode && user?.role === 'admin') {
+            setIsAdminSidebarOpen((prev) => !prev);
+          } else if (user) {
+            setIsUserSidebarOpen((prev) => !prev);
+          }
+        }}
+        isSidePanelOpen={isAdminMode ? isAdminSidebarOpen : isUserSidebarOpen}
         isAdminMode={isAdminMode}
         unreadNotificationsCount={unreadNotificationsCount}
         onOpenNotifications={() => setNotificationModalOpen(true)}
@@ -303,7 +321,7 @@ export default function App() {
               isMerchant: false,
               merchantSecurityPledge: 0,
               kycStatus: 'unverified',
-              avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+              avatarUrl: '',
               createdAt: Date.now(),
               lockedMinedBalance: 0,
             }}
@@ -348,7 +366,7 @@ export default function App() {
               isMerchant: false,
               merchantSecurityPledge: 0,
               kycStatus: 'unverified',
-              avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+              avatarUrl: '',
               createdAt: Date.now(),
               lockedMinedBalance: 0,
             }}
@@ -359,8 +377,16 @@ export default function App() {
 
         {/* ADMIN VIEW - STRICTLY DISCLOSED ONLY TO AUTHENTICATED ADMINS */}
         {currentTab === 'admin' && user?.role === 'admin' && (
-          adminSection === 'dashboard' ? <AdminDashboard /> : <AdminView
+          <AdminView
+            currentSection={adminSection}
+            onNavigateSection={(section) => setAdminSection(section)}
             onExitAdmin={() => {
+              setIsAdminMode(false);
+              setCurrentTab('dashboard');
+            }}
+            onLogout={() => {
+              StorageService.saveUser(null);
+              setUser(null);
               setIsAdminMode(false);
               setCurrentTab('dashboard');
             }}
@@ -413,13 +439,45 @@ export default function App() {
           handleTabChange(tab as any);
         }}
       />
+      {/* Platform User Sidebar - Separate from Admin */}
+      {user && !isAdminMode && (
+        <UserSidebar
+          open={isUserSidebarOpen}
+          onClose={() => setIsUserSidebarOpen(false)}
+          onNavigateTab={(tab) => {
+            handleTabChange(tab);
+            setIsUserSidebarOpen(false);
+          }}
+          onLogout={handleLogout}
+          user={user}
+          currentTab={currentTab}
+        />
+      )}
+
       {/* Admin Sidebar */}
       {isAdminMode && (
         <AdminSidebar
           open={isAdminSidebarOpen}
           onClose={() => setIsAdminSidebarOpen(false)}
-          onNavigate={(section) => { setAdminSection(section); setIsAdminSidebarOpen(false); }}
-          onLogout={() => { setIsAdminMode(false); setIsAdminSidebarOpen(false); }}
+          onNavigate={(section) => {
+            setAdminSection(section);
+            setIsAdminSidebarOpen(false);
+            if (currentTab !== 'admin') {
+              setCurrentTab('admin');
+            }
+          }}
+          onLogout={() => {
+            StorageService.saveUser(null);
+            setUser(null);
+            setIsAdminMode(false);
+            setIsAdminSidebarOpen(false);
+            setCurrentTab('dashboard');
+          }}
+          activeSection={adminSection}
+          onViewLiveSite={() => {
+            setIsAdminMode(false);
+            setCurrentTab('dashboard');
+          }}
         />
       )}
     </div>

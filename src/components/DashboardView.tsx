@@ -234,7 +234,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <img src={user.avatarUrl} alt={user.username} className="w-12 h-12 rounded-full object-cover border-2 border-amber-500/60" />
+            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-amber-500/60 flex items-center justify-center text-amber-400 shadow-md flex-shrink-0">
+              <User className="w-6 h-6" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-bold text-white">{user.username}</h1>

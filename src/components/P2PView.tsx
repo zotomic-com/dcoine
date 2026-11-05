@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Wallet,
   Percent,
+  User,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { P2POrder, P2PTrade, PlatformCommissionConfig, TokenItem, UserProfile } from '../types';
@@ -1113,7 +1114,9 @@ export const P2PView: React.FC<P2PViewProps> = ({
       {subTab === 'profile' && (
         <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
           <div className="flex items-center gap-3">
-            <img src={user.avatarUrl} alt={user.username} className="w-12 h-12 rounded-full object-cover border-2 border-amber-500/50" />
+            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-amber-500/50 flex items-center justify-center text-amber-400 shadow-md flex-shrink-0">
+              <User className="w-6 h-6" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-white">{user.username}</h2>

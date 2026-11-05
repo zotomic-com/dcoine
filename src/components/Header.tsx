@@ -3,15 +3,9 @@ import {
   ChevronDown,
   Copy,
   Check,
-  ShieldAlert,
   Bell,
-  Sparkles,
-  ExternalLink,
-  ShieldCheck,
-  User,
-  Radio,
-  LogOut,
   LogIn,
+  User,
 } from 'lucide-react';
 import { BlockchainNetwork, UserProfile, UserWallet } from '../types';
 import { NETWORKS } from '../services/storage';
@@ -29,6 +23,8 @@ interface HeaderProps {
   onLogout: () => void;
   onToggleAdmin: () => void;
   onOpenAdminSidebar?: () => void;
+  onToggleAdminSidebar?: () => void;
+  isSidePanelOpen?: boolean;
   isAdminMode: boolean;
   onOpenNotifications?: () => void;
   unreadNotificationsCount?: number;
@@ -45,6 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onToggleAdmin,
   onOpenAdminSidebar,
+  onToggleAdminSidebar,
+  isSidePanelOpen = false,
   isAdminMode,
   onOpenNotifications,
   unreadNotificationsCount = 0,
@@ -60,44 +58,97 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const isUserAdmin = user?.role === 'admin';
-
   return (
     <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
-        {/* Logo & Brand */}
-        <div
-          className="flex items-center gap-2 cursor-pointer flex-shrink-0 select-none"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          <div className="relative flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
-            <img
-              src="/logo.png"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src =
-                  '/assets/aistudio/WhatsApp_Image_2026-10-29_at_22.31.08-removebg-preview_89173f9b.png';
-              }}
-              alt="Dcoine Logo"
-              className="w-full h-full object-contain block drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] transform hover:scale-105 transition"
-              loading="eager"
-            />
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2 sm:h-2.5 sm:w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
-            </span>
-          </div>
+        {/* Header Left Corner: Side Panel Toggle Button + Logo & Brand */}
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          {/* Side Panel Toggle Button (Open / Close) - ONLY shown when user is logged in / signed in */}
+          {user && (
+            <button
+              type="button"
+              onClick={onToggleAdminSidebar || onOpenAdminSidebar}
+              className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl border transition-all cursor-pointer flex-shrink-0 group ${
+                isSidePanelOpen
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm shadow-amber-500/10'
+                  : 'bg-slate-900/90 text-slate-400 hover:text-white hover:bg-slate-800 border-slate-800 hover:border-slate-700'
+              }`}
+              title={isSidePanelOpen ? 'Close Side Menu' : 'Open Side Menu'}
+              aria-label={isSidePanelOpen ? 'Close Side Menu' : 'Open Side Menu'}
+            >
+              <svg
+                viewBox="-0.5 -0.5 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all duration-200 ${
+                  isSidePanelOpen
+                    ? 'text-amber-400 scale-105'
+                    : 'text-slate-400 group-hover:text-amber-300'
+                }`}
+              >
+                <path
+                  d="M12.7769375 14.284625H2.2230625c-0.8326875 0 -1.5076875 -0.675 -1.5076875 -1.5076875l0 -10.553875c0 -0.8326875 0.675 -1.5076875 1.5076875 -1.5076875h10.553875c0.8326875 0 1.5076875 0.675 1.5076875 1.5076875v10.553875c0 0.8326875 -0.675 1.5076875 -1.5076875 1.5076875Z"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.15"
+                />
+                <path
+                  d={
+                    isSidePanelOpen
+                      ? "M3.91925 5.9923125 2.6 7.5l1.31925 1.5076875"
+                      : "M2.6 5.9923125 3.91925 7.5 2.6 9.0076875"
+                  }
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.15"
+                />
+                <path
+                  d="M5.615375 14.284625V0.715375"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.15"
+                />
+              </svg>
+            </button>
+          )}
 
-          <div className="hidden sm:block flex-shrink-0">
-            <div className="flex items-center gap-1">
-              <span className="text-sm sm:text-base font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
-                Dcoine
-              </span>
-              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                ECOSYSTEM
+          {/* Logo & Brand */}
+          <div
+            className="flex items-center gap-2 cursor-pointer flex-shrink-0 select-none"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <div className="relative flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
+              <img
+                src="/logo.png"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src =
+                    '/assets/aistudio/WhatsApp_Image_2026-10-29_at_22.31.08-removebg-preview_89173f9b.png';
+                }}
+                alt="Dcoine Logo"
+                className="w-full h-full object-contain block drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] transform hover:scale-105 transition"
+                loading="eager"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
               </span>
             </div>
-            <p className="text-[9px] text-slate-400 hidden sm:block -mt-0.5 font-medium">Decentralized Coin</p>
+
+            <div className="hidden sm:block flex-shrink-0">
+              <div className="flex items-center gap-1">
+                <span className="text-sm sm:text-base font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
+                  Dcoine
+                </span>
+                <span className="hidden sm:inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  ECOSYSTEM
+                </span>
+              </div>
+              <p className="text-[9px] text-slate-400 hidden sm:block -mt-0.5 font-medium">Decentralized Coin</p>
+            </div>
           </div>
         </div>
 
@@ -197,22 +248,6 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* ADMIN CONSOLE BUTTON - STRICTLY HIDDEN UNLESS USER IS VERIFIED ADMIN */}
-          {isUserAdmin && (
-            <button
-              onClick={onToggleAdmin}
-              className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-bold transition flex-shrink-0 whitespace-nowrap cursor-pointer ${
-                isAdminMode
-                  ? 'bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.5)]'
-                  : 'bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30'
-              }`}
-              title={isAdminMode ? 'Exit Admin Mode' : 'Admin Control Panel'}
-            >
-              <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="hidden sm:inline">{isAdminMode ? 'Exit Admin' : 'Admin Panel'}</span>
-            </button>
-          )}
-
           {/* PROFILE ICON / BUTTON:
               - If NOT logged in: Clicking shows login/signup modal
               - If logged in: Clicking shows their profile page
@@ -223,19 +258,8 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-900 border border-slate-800 hover:border-amber-500/40 transition cursor-pointer flex-shrink-0"
               title={`Logged in as ${user.username} (View Profile)`}
             >
-              <div className="w-6 h-6 rounded-full overflow-hidden border border-amber-500/50 flex items-center justify-center bg-slate-800 text-[11px] font-bold text-amber-300">
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
-                ) : (
-                  user.username.slice(0, 1).toUpperCase()
-           )}
- 
-           {/* ADMIN SIDEBAR TOGGLE */}
-           {isAdminMode && onOpenAdminSidebar && (
-             <button onClick={onOpenAdminSidebar} className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 flex-shrink-0" title="Admin Panel">
-               <ShieldCheck className="w-3.5 h-3.5" />
-             </button>
-           )}
+              <div className="w-6 h-6 rounded-full border border-amber-500/50 flex items-center justify-center bg-slate-800 text-amber-400">
+                <User className="w-3.5 h-3.5" />
               </div>
               <span className="hidden md:inline text-xs font-semibold text-slate-200 max-w-[80px] truncate">
                 {user.username}
@@ -244,23 +268,11 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <button
               onClick={onOpenAuthModal}
-              className="flex items-center gap-1.5 px-3 py-1 sm:py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition shadow-sm cursor-pointer flex-shrink-0 whitespace-nowrap"
+              className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 transition shadow-sm cursor-pointer flex-shrink-0 group"
               title="Sign in or create account"
+              aria-label="Sign In"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Sign In</span>
-            </button>
-          )}
-
-          {/* LOGOUT BUTTON - STRICTLY VISIBLE ONLY FOR LOGGED-IN USERS (HIDDEN FOR GUESTS) */}
-          {user && (
-            <button
-              onClick={onLogout}
-              className="flex items-center gap-1 px-2.5 py-1 sm:py-1.5 rounded-full bg-slate-900 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 text-xs font-semibold transition cursor-pointer flex-shrink-0 whitespace-nowrap"
-              title="Log out of account"
-            >
-              <LogOut className="w-3.5 h-3.5 text-rose-400" />
-              <span className="hidden md:inline">Log Out</span>
+              <LogIn className="w-4 h-4 transition-transform group-hover:scale-110" />
             </button>
           )}
         </div>

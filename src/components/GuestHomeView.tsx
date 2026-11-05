@@ -18,6 +18,7 @@ import {
   Award,
 } from 'lucide-react';
 import { BlockchainNetwork, TokenItem } from '../types';
+import { StorageService } from '../services/storage';
 
 interface GuestHomeViewProps {
   tokens: TokenItem[];
@@ -32,8 +33,49 @@ export const GuestHomeView: React.FC<GuestHomeViewProps> = ({
   onOpenAuthModal,
   onNavigateTab,
 }) => {
+  const [heroContent, setHeroContent] = React.useState(() => StorageService.getHeroContent());
+
+  React.useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('dcoine_cms_bus');
+        bc.onmessage = (e) => {
+          if (e.data?.type === 'HERO_UPDATED') {
+            setHeroContent(e.data.payload);
+          }
+        };
+      }
+    } catch {}
+
+    const handleStorage = () => {
+      setHeroContent(StorageService.getHeroContent());
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   return (
     <div className="space-y-8 pb-20 max-w-5xl mx-auto px-3 sm:px-4">
+      {/* 0. PROMO BANNER (IF ACTIVE IN CMS) */}
+      {heroContent.isBannerActive && heroContent.promoBannerText && (
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-yellow-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 animate-pulse" />
+            <span>{heroContent.promoBannerText}</span>
+          </div>
+          <button
+            onClick={() => onOpenAuthModal('signup')}
+            className="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-[11px] whitespace-nowrap hover:bg-amber-400 transition"
+          >
+            Claim Now
+          </button>
+        </div>
+      )}
+
       {/* 1. HERO SECTION */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border border-slate-800 p-6 sm:p-10 shadow-2xl text-center sm:text-left">
         {/* Glow Halos */}
@@ -44,19 +86,18 @@ export const GuestHomeView: React.FC<GuestHomeViewProps> = ({
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold mb-4 leading-none">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Next-Generation Decentralized Coin Ecosystem</span>
+            <span>{heroContent.badgeText || 'Next-Generation Decentralized Coin Ecosystem'}</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight sm:leading-none">
-            Sovereign Web3 Wealth,{' '}
+            {heroContent.headline || 'Sovereign Web3 Wealth,'}{' '}
             <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
-              24H Cloud Mining
-            </span>{' '}
-            &amp; Escrow Trading
+              {heroContent.highlightWord || '24H Cloud Mining'}
+            </span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 mt-4 leading-relaxed">
-            Mine native <strong className="text-amber-400">DCOIN</strong> daily with zero battery drain via Proof-of-Engagement. Secure non-custodial multi-chain vaults, trade fiat-to-crypto with smart contract escrow, and swap tokens across 7 major blockchains.
+            {heroContent.subheadline || 'Mine native DCOIN daily with zero battery drain via Proof-of-Engagement.'}
           </p>
 
           {/* High-Converting Action CTAs */}
