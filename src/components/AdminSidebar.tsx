@@ -19,6 +19,7 @@ import {
   Plus,
   Check,
   Image as ImageIcon,
+  Coins,
 } from 'lucide-react';
 import { StorageService } from '../services/storage';
 
@@ -40,11 +41,12 @@ export const ADMIN_MENU_ITEMS = [
   { id: 'earnings', label: '3. Earnings/Revenue', shortLabel: 'Earnings', icon: DollarSign, badge: 'USD' },
   { id: 'p2pads', label: '4. P2P Ads', shortLabel: 'P2P Ads', icon: Megaphone, badge: 'Escrow' },
   { id: 'transactions', label: '5. Transactions', shortLabel: 'Transactions', icon: Receipt, badge: 'Chains' },
-  { id: 'cms', label: '6. CMS (Content)', shortLabel: 'CMS', icon: FileText, badge: 'Live' },
-  { id: 'staff', label: '7. Staff & Team', shortLabel: 'Staff', icon: Users2, badge: 'Roles' },
-  { id: 'settings', label: '8. Settings', shortLabel: 'Settings', icon: Settings, badge: 'Site' },
-  { id: 'integrations', label: '9. Integrations', shortLabel: 'Integrations', icon: Plug, badge: 'API' },
-  { id: 'profile', label: '10. Profile', shortLabel: 'Profile', icon: User, badge: '2FA' },
+  { id: 'coin', label: '6. Coin (DC Native)', shortLabel: 'Coin', icon: Coins, badge: 'Native' },
+  { id: 'cms', label: '7. CMS (Content)', shortLabel: 'CMS', icon: FileText, badge: 'Live' },
+  { id: 'staff', label: '8. Staff & Team', shortLabel: 'Staff', icon: Users2, badge: 'Roles' },
+  { id: 'settings', label: '9. Settings', shortLabel: 'Settings', icon: Settings, badge: 'Site' },
+  { id: 'integrations', label: '10. Integrations', shortLabel: 'Integrations', icon: Plug, badge: 'API' },
+  { id: 'profile', label: '11. Profile', shortLabel: 'Profile', icon: User, badge: '2FA' },
 ];
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({

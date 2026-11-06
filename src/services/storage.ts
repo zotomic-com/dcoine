@@ -28,6 +28,14 @@ import {
   CMSPage,
   CMSPageBlock,
   CMSPageSEO,
+  CoinTokenomicsConfig,
+  CoinMigrationPolicy,
+  UserMigrationStatus,
+  CoinReserveAllocation,
+  CoinVestingSchedule,
+  AccountLockRule,
+  CoinTransferRequest,
+  LiveMinerTelemetry,
 } from '../types';
 import { generateAddress, generateMnemonic, generatePrivateKey, generateReferralCode } from '../utils/crypto';
 
@@ -2542,5 +2550,490 @@ export class StorageService {
       timestamp: Date.now(),
     };
     this.saveEmployeeActivityLogs([newLog, ...list]);
+  }
+
+  // ============================================================================
+  // NATIVE DC COIN & TOKENOMICS MANAGEMENT
+  // ============================================================================
+
+  private static DEFAULT_COIN_TOKENOMICS: CoinTokenomicsConfig = {
+    totalSupply: 100000000, // 100M DC Cap
+    circulatingSupply: 14520300,
+    minedSupply: 41250890, // 41.25M DC Mined
+    reserveSupply: 30000000, // 30M Platform Reserve
+    presaleSupply: 14228810, // 14.2M Strategic Presale
+    miningRewardPerBlock: 5.0,
+    blockTimeSeconds: 15,
+    nextHalvingBlock: 2100000,
+    currentBlockHeight: 1489205,
+    mining24hMined: 28800, // 28,800 DC mined in last 24h (5,760 blocks * 5 DC)
+    previous24hMined: 25200, // 25,200 DC mined in previous 24h
+    transfersGloballyEnabled: false, // Default AUTO-REJECT mode until admin activates
+    require2FAForTransfers: true,
+    requireAdminApprovalForTransfers: true,
+    strictKycEnforcedForMigration: true, // Non-KYC users on Auto-Hold
+    updatedAt: Date.now(),
+  };
+
+  private static DEFAULT_MIGRATION_POLICIES: CoinMigrationPolicy[] = [
+    {
+      id: 'mig-phase-1',
+      phaseName: 'Phase 1: Genesis Mainnet Migration (60% Unlocked)',
+      globalReleasePercentage: 60,
+      globalLockedPercentage: 40,
+      maxTransferCapPerUser: 500000,
+      minMinedThreshold: 10,
+      requireKycVerification: true,
+      isActive: true,
+      totalEligibleUsers: 124,
+      totalMinedAggregate: 41250890,
+      totalAuthorizedForRelease: 24750534, // 60% of mined
+      totalRetainedInLockup: 16500356, // 40% locked in custody
+      totalKycAutoHeld: 5420100, // Non-KYC miners on hold
+      updatedAt: Date.now() - 3600000,
+    },
+    {
+      id: 'mig-phase-2',
+      phaseName: 'Phase 2: Milestone 2 Expansion (80% Release)',
+      globalReleasePercentage: 80,
+      globalLockedPercentage: 20,
+      maxTransferCapPerUser: 1000000,
+      minMinedThreshold: 25,
+      requireKycVerification: true,
+      isActive: false,
+      totalEligibleUsers: 124,
+      totalMinedAggregate: 41250890,
+      totalAuthorizedForRelease: 33000712,
+      totalRetainedInLockup: 8250178,
+      totalKycAutoHeld: 7226800,
+      updatedAt: Date.now() - 86400000,
+    },
+  ];
+
+  private static DEFAULT_USER_MIGRATIONS: UserMigrationStatus[] = [
+    {
+      userId: 'usr_alex_v',
+      walletAddress: '0x71C...4e8B',
+      userName: 'Alex Vance',
+      userEmail: 'alex.vance@cryptomail.org',
+      kycStatus: 'verified',
+      totalMined: 382400,
+      unlockedMigratableAmount: 229440, // 60%
+      lockedReserveAmount: 152960, // 40%
+      migrationHoldState: 'active_unlocked',
+      alreadyTransferredAmount: 0,
+      lastUpdated: Date.now() - 86400000,
+    },
+    {
+      userId: 'usr_liam_o',
+      walletAddress: '0x94B...2F19',
+      userName: 'Liam O Connor',
+      userEmail: 'liam.oc@dublinledger.ie',
+      kycStatus: 'pending',
+      totalMined: 450000,
+      unlockedMigratableAmount: 270000,
+      lockedReserveAmount: 180000,
+      migrationHoldState: 'auto_hold_kyc_required', // Auto-hold because non-KYC!
+      alreadyTransferredAmount: 0,
+      lastUpdated: Date.now() - 43200000,
+    },
+    {
+      userId: 'usr_priya_p',
+      walletAddress: '0x32A...8E72',
+      userName: 'Priya Patel',
+      userEmail: 'priya.patel@mumbaitech.in',
+      kycStatus: 'verified',
+      totalMined: 125000,
+      unlockedMigratableAmount: 75000, // 60%
+      lockedReserveAmount: 50000, // 40%
+      migrationHoldState: 'active_unlocked',
+      alreadyTransferredAmount: 0,
+      lastUpdated: Date.now() - 12000000,
+    },
+    {
+      userId: 'usr_sarah_c',
+      walletAddress: '0x55C...1D90',
+      userName: 'Sarah Chen',
+      userEmail: 'sarah.chen@pacificdecentral.io',
+      kycStatus: 'unverified',
+      totalMined: 920000,
+      unlockedMigratableAmount: 552000,
+      lockedReserveAmount: 368000,
+      migrationHoldState: 'auto_hold_kyc_required', // Auto-hold!
+      alreadyTransferredAmount: 0,
+      lastUpdated: Date.now() - 5000000,
+    },
+    {
+      userId: 'usr_elena_r',
+      walletAddress: '0x18B...3F44',
+      userName: 'Elena Rostova',
+      userEmail: 'elena.rostova@dcoin.internal',
+      kycStatus: 'verified',
+      totalMined: 640000,
+      unlockedMigratableAmount: 384000,
+      lockedReserveAmount: 256000,
+      migrationHoldState: 'active_unlocked',
+      alreadyTransferredAmount: 45000,
+      lastUpdated: Date.now() - 1000000,
+    },
+    {
+      userId: 'usr_dcoin_whale',
+      walletAddress: '0x88A...99FF',
+      userName: 'Crypto Sovereign',
+      userEmail: 'whale@genesisnodes.org',
+      kycStatus: 'verified',
+      totalMined: 1850000,
+      unlockedMigratableAmount: 1110000,
+      lockedReserveAmount: 740000,
+      migrationHoldState: 'active_unlocked',
+      alreadyTransferredAmount: 0,
+      lastUpdated: Date.now() - 600000,
+    },
+  ];
+
+  private static DEFAULT_RESERVES: CoinReserveAllocation[] = [
+    {
+      id: 'res-001',
+      category: 'treasury',
+      beneficiaryName: 'Platform Reserve Multi-Sig Vault',
+      walletAddress: '0x10A981dE8c2B52B7eFeC62c6d48f7d983411a001',
+      allocatedAmount: 15000000,
+      releasedAmount: 0,
+      releaseDate: '2027-01-01',
+      status: 'locked',
+      notes: 'Strategic long-term platform backing reserve. Immutable time-lock.',
+      vestingMonths: 36,
+      cliffMonths: 12,
+      createdAt: Date.now() - 90 * 86400000,
+    },
+    {
+      id: 'res-002',
+      category: 'team',
+      beneficiaryName: 'Core Protocol Engineers & Security Team',
+      walletAddress: '0x71Fb29B851cC138374e2079234f9a0F98722b4E8',
+      allocatedAmount: 8000000,
+      releasedAmount: 1000000,
+      releaseDate: '2026-12-31',
+      status: 'partially_unlocked',
+      notes: '4-year linear vesting schedule with quarterly disbursement milestone verification.',
+      vestingMonths: 48,
+      cliffMonths: 6,
+      createdAt: Date.now() - 180 * 86400000,
+    },
+    {
+      id: 'res-003',
+      category: 'liquidity',
+      beneficiaryName: 'Automated Market Maker & CEX Liquidity Pool',
+      walletAddress: '0x32Ab994F8812cE78129Fa0231924519924599A02',
+      allocatedAmount: 5000000,
+      releasedAmount: 2500000,
+      releaseDate: '2026-08-30',
+      status: 'partially_unlocked',
+      notes: 'Initial decentralized pool depth paired against USDT and ETH.',
+      vestingMonths: 12,
+      cliffMonths: 0,
+      createdAt: Date.now() - 120 * 86400000,
+    },
+    {
+      id: 'res-004',
+      category: 'presale',
+      beneficiaryName: 'Early Strategic Institutional Angels & Backers',
+      walletAddress: '0x991Fe89A2140a7bE3120Fa98103F61314B819441',
+      allocatedAmount: 14228810,
+      releasedAmount: 4200000,
+      releaseDate: '2026-09-15',
+      status: 'partially_unlocked',
+      notes: 'Private presale round allocations. Subject to 12-month cliff and strict monthly tranche releases.',
+      vestingMonths: 18,
+      cliffMonths: 6,
+      createdAt: Date.now() - 150 * 86400000,
+    },
+    {
+      id: 'res-005',
+      category: 'ecosystem',
+      beneficiaryName: 'Decentralized Community Grants & Security Bounties',
+      walletAddress: '0x62C10a489Fe77c61B9245180Fa441A9b9104A108',
+      allocatedAmount: 2000000,
+      releasedAmount: 250000,
+      releaseDate: '2026-11-01',
+      status: 'partially_unlocked',
+      notes: 'Funding developer integrations, open-source SDK contributions, and protocol audits.',
+      vestingMonths: 24,
+      cliffMonths: 0,
+      createdAt: Date.now() - 60 * 86400000,
+    },
+  ];
+
+  private static DEFAULT_ACCOUNT_LOCKS: AccountLockRule[] = [
+    {
+      id: 'lock-001',
+      accountAddress: '0x94B73...2F19',
+      accountName: 'Liam O Connor',
+      accountEmail: 'liam.oc@dublinledger.ie',
+      lockedAmount: 180000,
+      isFullBalanceLock: false,
+      lockReason: 'Phase 1 Migration 40% Custody Hold - Unverified KYC',
+      autoUnlockDate: '2026-12-31',
+      status: 'active',
+      createdBy: 'System Migration Engine',
+      createdAt: Date.now() - 86400000 * 2,
+    },
+    {
+      id: 'lock-002',
+      accountAddress: '0x55C19...1D90',
+      accountName: 'Sarah Chen',
+      accountEmail: 'sarah.chen@pacificdecentral.io',
+      lockedAmount: 368000,
+      isFullBalanceLock: false,
+      lockReason: 'Non-KYC Auto-Hold Security Restriction',
+      autoUnlockDate: 'indefinite',
+      status: 'active',
+      createdBy: 'Compliance Daemon',
+      createdAt: Date.now() - 86400000 * 5,
+    },
+    {
+      id: 'lock-003',
+      accountAddress: '0x32A44...9F21',
+      accountName: 'Elena Rostova',
+      accountEmail: 'elena.rostova@dcoin.internal',
+      lockedAmount: 50000,
+      isFullBalanceLock: false,
+      lockReason: 'Verified Merchant Escrow Collateral Security Pledge',
+      autoUnlockDate: '2027-06-30',
+      status: 'active',
+      createdBy: 'Marcus Vance (Admin)',
+      createdAt: Date.now() - 86400000 * 15,
+    },
+  ];
+
+  private static DEFAULT_TRANSFER_REQUESTS: CoinTransferRequest[] = [
+    {
+      id: 'tx-req-001',
+      senderAddress: '0x94B73...2F19',
+      senderName: 'Liam O Connor',
+      senderEmail: 'liam.oc@dublinledger.ie',
+      recipientAddress: '0x112A...990B',
+      amount: 25000,
+      twoFactorVerified: false,
+      kycVerified: false,
+      migrationChecked: false,
+      status: 'auto_rejected',
+      rejectionReason: 'Auto-Rejected: Native DC Coin transfers paused by master administrator circuit breaker & user KYC unverified.',
+      ledgerHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      createdAt: Date.now() - 1000 * 60 * 18,
+    },
+    {
+      id: 'tx-req-002',
+      senderAddress: '0x55C19...1D90',
+      senderName: 'Sarah Chen',
+      senderEmail: 'sarah.chen@pacificdecentral.io',
+      recipientAddress: '0x8891...33F1',
+      amount: 150000,
+      twoFactorVerified: true,
+      kycVerified: false,
+      migrationChecked: false,
+      status: 'auto_rejected',
+      rejectionReason: 'Auto-Hold Gated: Non-KYC account attempted DC coin migration withdrawal.',
+      ledgerHash: '7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
+      createdAt: Date.now() - 1000 * 60 * 45,
+    },
+    {
+      id: 'tx-req-003',
+      senderAddress: '0x71C82...4e8B',
+      senderName: 'Alex Vance',
+      senderEmail: 'alex.vance@cryptomail.org',
+      recipientAddress: '0x32A44...9F21',
+      amount: 40000,
+      twoFactorVerified: true,
+      kycVerified: true,
+      migrationChecked: true, // within 60% quota
+      status: 'pending_admin_review',
+      ledgerHash: 'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
+      createdAt: Date.now() - 1000 * 60 * 8,
+    },
+    {
+      id: 'tx-req-004',
+      senderAddress: '0x88A19...99FF',
+      senderName: 'Crypto Sovereign',
+      senderEmail: 'whale@genesisnodes.org',
+      recipientAddress: '0x991Fe...9441',
+      amount: 500000,
+      twoFactorVerified: true,
+      kycVerified: true,
+      migrationChecked: true,
+      status: 'approved',
+      ledgerHash: 'b5a2c9b149dcd15b130e8c8b42a65e17d7456535cf7982fb244274c3e85eee49',
+      createdAt: Date.now() - 1000 * 60 * 180,
+      reviewedAt: Date.now() - 1000 * 60 * 150,
+      reviewedBy: 'Marcus Vance (Super Admin)',
+      adminNotes: 'Cryptographic identity and source of funds verified against genesis node mining telemetry.',
+    },
+  ];
+
+  private static DEFAULT_LIVE_MINERS: LiveMinerTelemetry[] = [
+    {
+      minerId: 'miner-node-01',
+      userAddress: '0x88A19...99FF',
+      userName: 'Crypto Sovereign (Genesis Farm)',
+      hashRateMHs: 485.4,
+      validShares: 142890,
+      activeWorkers: 16,
+      lastHeartbeat: Date.now() - 3000,
+      estDailyYieldDC: 320.5,
+      status: 'mining',
+    },
+    {
+      minerId: 'miner-node-02',
+      userAddress: '0x71C82...4e8B',
+      userName: 'Alex Vance (Node Rig 1)',
+      hashRateMHs: 142.8,
+      validShares: 48120,
+      activeWorkers: 4,
+      lastHeartbeat: Date.now() - 5000,
+      estDailyYieldDC: 94.2,
+      status: 'mining',
+    },
+    {
+      minerId: 'miner-node-03',
+      userAddress: '0x32A44...9F21',
+      userName: 'Elena Rostova (Validator Cluster)',
+      hashRateMHs: 218.6,
+      validShares: 67910,
+      activeWorkers: 8,
+      lastHeartbeat: Date.now() - 2000,
+      estDailyYieldDC: 144.0,
+      status: 'mining',
+    },
+    {
+      minerId: 'miner-node-04',
+      userAddress: '0x55C19...1D90',
+      userName: 'Sarah Chen (Mobile ASIC)',
+      hashRateMHs: 88.2,
+      validShares: 24100,
+      activeWorkers: 2,
+      lastHeartbeat: Date.now() - 8000,
+      estDailyYieldDC: 58.1,
+      status: 'mining',
+    },
+    {
+      minerId: 'miner-node-05',
+      userAddress: '0x94B73...2F19',
+      userName: 'Liam O Connor (Dublin Rig)',
+      hashRateMHs: 64.0,
+      validShares: 18450,
+      activeWorkers: 2,
+      lastHeartbeat: Date.now() - 12000,
+      estDailyYieldDC: 42.2,
+      status: 'mining',
+    },
+    {
+      minerId: 'miner-node-06',
+      userAddress: '0x32A...8E72',
+      userName: 'Priya Patel (Cloud Instance)',
+      hashRateMHs: 112.5,
+      validShares: 33400,
+      activeWorkers: 3,
+      lastHeartbeat: Date.now() - 4000,
+      estDailyYieldDC: 74.8,
+      status: 'mining',
+    },
+  ];
+
+  public static getCoinTokenomicsConfig(): CoinTokenomicsConfig {
+    return this.getItem<CoinTokenomicsConfig>('admin_coin_tokenomics_config', this.DEFAULT_COIN_TOKENOMICS);
+  }
+
+  public static saveCoinTokenomicsConfig(config: CoinTokenomicsConfig): void {
+    this.setItem('admin_coin_tokenomics_config', config);
+  }
+
+  public static getMigrationPolicies(): CoinMigrationPolicy[] {
+    return this.getItem<CoinMigrationPolicy[]>('admin_coin_migration_policies', this.DEFAULT_MIGRATION_POLICIES);
+  }
+
+  public static saveMigrationPolicies(policies: CoinMigrationPolicy[]): void {
+    this.setItem('admin_coin_migration_policies', policies);
+  }
+
+  public static getActiveMigrationPolicy(): CoinMigrationPolicy {
+    const list = this.getMigrationPolicies();
+    return list.find((p) => p.isActive) || list[0] || this.DEFAULT_MIGRATION_POLICIES[0];
+  }
+
+  public static getUserMigrationStatuses(): UserMigrationStatus[] {
+    return this.getItem<UserMigrationStatus[]>('admin_coin_user_migrations', this.DEFAULT_USER_MIGRATIONS);
+  }
+
+  public static getUserMigrations(): UserMigrationStatus[] {
+    return this.getUserMigrationStatuses();
+  }
+
+  public static saveUserMigrationStatuses(records: UserMigrationStatus[]): void {
+    this.setItem('admin_coin_user_migrations', records);
+  }
+
+  public static saveUserMigrations(records: UserMigrationStatus[]): void {
+    this.saveUserMigrationStatuses(records);
+  }
+
+  public static updateUserKycMigrationStatus(
+    userId: string,
+    newKyc: 'verified' | 'unverified' | 'pending' | 'rejected'
+  ): void {
+    const list = this.getUserMigrationStatuses();
+    const policy = this.getActiveMigrationPolicy();
+    const updated = list.map((u) => {
+      if (u.userId === userId || u.userEmail === userId) {
+        const isVerified = newKyc === 'verified';
+        const holdState: 'active_unlocked' | 'auto_hold_kyc_required' = isVerified
+          ? 'active_unlocked'
+          : 'auto_hold_kyc_required';
+        const releasePercent = u.customOverridePercentage ?? policy.globalReleasePercentage;
+        const unlocked = isVerified ? (u.totalMined * releasePercent) / 100 : 0;
+        const locked = u.totalMined - unlocked;
+        return {
+          ...u,
+          kycStatus: newKyc,
+          migrationHoldState: holdState,
+          unlockedMigratableAmount: unlocked,
+          lockedReserveAmount: locked,
+          lastUpdated: Date.now(),
+        };
+      }
+      return u;
+    });
+    this.saveUserMigrationStatuses(updated);
+  }
+
+  public static getReserveAllocations(): CoinReserveAllocation[] {
+    return this.getItem<CoinReserveAllocation[]>('admin_coin_reserves', this.DEFAULT_RESERVES);
+  }
+
+  public static saveReserveAllocations(allocations: CoinReserveAllocation[]): void {
+    this.setItem('admin_coin_reserves', allocations);
+  }
+
+  public static getAccountLockRules(): AccountLockRule[] {
+    return this.getItem<AccountLockRule[]>('admin_coin_account_locks', this.DEFAULT_ACCOUNT_LOCKS);
+  }
+
+  public static saveAccountLockRules(rules: AccountLockRule[]): void {
+    this.setItem('admin_coin_account_locks', rules);
+  }
+
+  public static getCoinTransferRequests(): CoinTransferRequest[] {
+    return this.getItem<CoinTransferRequest[]>('admin_coin_transfer_requests', this.DEFAULT_TRANSFER_REQUESTS);
+  }
+
+  public static saveCoinTransferRequests(requests: CoinTransferRequest[]): void {
+    this.setItem('admin_coin_transfer_requests', requests);
+  }
+
+  public static getLiveMiners(): LiveMinerTelemetry[] {
+    return this.getItem<LiveMinerTelemetry[]>('admin_coin_live_miners', this.DEFAULT_LIVE_MINERS);
+  }
+
+  public static saveLiveMiners(miners: LiveMinerTelemetry[]): void {
+    this.setItem('admin_coin_live_miners', miners);
   }
 }

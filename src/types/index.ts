@@ -532,3 +532,134 @@ export interface CMSPage {
   isSystemPage?: boolean;
 }
 
+// ================= NATIVE DC COIN & TOKENOMICS MANAGEMENT =================
+
+export interface CoinTokenomicsConfig {
+  totalSupply: number; // e.g. 100,000,000 DC
+  circulatingSupply: number;
+  minedSupply: number;
+  reserveSupply: number;
+  presaleSupply: number;
+  miningRewardPerBlock: number; // e.g. 5 DC
+  blockTimeSeconds: number; // e.g. 15s
+  nextHalvingBlock: number;
+  currentBlockHeight: number;
+  mining24hMined?: number; // DC mined in last 24h
+  previous24hMined?: number; // DC mined in previous 24h period
+  transfersGloballyEnabled: boolean; // Master circuit breaker (default: false / Auto-Reject)
+  require2FAForTransfers: boolean; // default: true
+  requireAdminApprovalForTransfers: boolean; // default: true
+  strictKycEnforcedForMigration: boolean; // default: true / Non-KYC auto-hold
+  updatedAt: number;
+}
+
+export interface CoinMigrationPolicy {
+  id: string;
+  phaseName: string; // e.g. "Phase 1: Genesis Mainnet Migration"
+  globalReleasePercentage: number; // e.g. 60 for 60%
+  globalLockedPercentage: number; // 40 for 40%
+  maxTransferCapPerUser: number; // Max DC per individual in this phase
+  minMinedThreshold: number; // Min mined DC to participate
+  requireKycVerification: boolean; // Strict KYC required
+  isActive: boolean;
+  totalEligibleUsers: number;
+  totalMinedAggregate: number; // e.g. 40,000,000 DC
+  totalAuthorizedForRelease: number; // e.g. 24,000,000 DC at 60%
+  totalRetainedInLockup: number; // e.g. 16,000,000 DC at 40%
+  totalKycAutoHeld: number; // DC belonging to unverified miners held in automatic compliance hold
+  updatedAt: number;
+}
+
+export interface UserMigrationStatus {
+  userId: string;
+  walletAddress: string;
+  userName: string;
+  userEmail: string;
+  kycStatus: 'verified' | 'pending' | 'unverified' | 'rejected';
+  totalMined: number;
+  unlockedMigratableAmount: number; // 60% of total mined (if KYC verified)
+  lockedReserveAmount: number; // 40% retained in custody
+  migrationHoldState: 'active_unlocked' | 'auto_hold_kyc_required' | 'admin_restricted';
+  alreadyTransferredAmount: number;
+  customOverridePercentage?: number; // Optional admin override
+  lastUpdated: number;
+}
+
+export type ReserveCategory = 'treasury' | 'team' | 'ecosystem' | 'presale' | 'liquidity' | 'custom';
+
+export interface CoinReserveAllocation {
+  id: string;
+  category: ReserveCategory;
+  beneficiaryName: string;
+  walletAddress: string;
+  allocatedAmount: number;
+  releasedAmount: number;
+  releaseDate: string; // YYYY-MM-DD
+  status: 'locked' | 'partially_unlocked' | 'fully_unlocked' | 'revoked';
+  notes?: string;
+  vestingMonths?: number;
+  cliffMonths?: number;
+  createdAt: number;
+}
+
+export interface CoinVestingSchedule {
+  id: string;
+  allocationId: string;
+  beneficiaryName: string;
+  cliffMonths: number;
+  vestingDurationMonths: number;
+  frequency: 'daily' | 'monthly' | 'quarterly';
+  totalAmount: number;
+  disbursedAmount: number;
+  lastDisbursedAt: number | null;
+  nextDisbursementAt: number;
+  status: 'active' | 'completed' | 'paused';
+}
+
+export interface AccountLockRule {
+  id: string;
+  accountAddress: string;
+  accountName: string;
+  accountEmail: string;
+  lockedAmount: number;
+  isFullBalanceLock: boolean;
+  lockReason: string;
+  autoUnlockDate: string; // YYYY-MM-DD or 'indefinite'
+  status: 'active' | 'unlocked' | 'overridden';
+  createdBy: string;
+  createdAt: number;
+}
+
+export type TransferReviewStatus = 'auto_rejected' | 'pending_admin_review' | 'approved' | 'rejected';
+
+export interface CoinTransferRequest {
+  id: string;
+  senderAddress: string;
+  senderName: string;
+  senderEmail: string;
+  recipientAddress: string;
+  amount: number;
+  twoFactorVerified: boolean;
+  kycVerified: boolean;
+  migrationChecked: boolean;
+  status: TransferReviewStatus;
+  rejectionReason?: string;
+  ledgerHash: string; // Cryptographic SHA-256 verifiable hash
+  createdAt: number;
+  reviewedAt?: number;
+  reviewedBy?: string;
+  adminNotes?: string;
+}
+
+export interface LiveMinerTelemetry {
+  minerId: string;
+  userAddress: string;
+  userName: string;
+  hashRateMHs: number;
+  validShares: number;
+  activeWorkers: number;
+  lastHeartbeat: number;
+  estDailyYieldDC: number;
+  status: 'online' | 'mining' | 'idle' | 'suspended';
+}
+

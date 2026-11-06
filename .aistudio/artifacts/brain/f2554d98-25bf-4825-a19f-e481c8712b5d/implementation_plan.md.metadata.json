@@ -1,0 +1,6 @@
+{
+  "summary": "Updated implementation plan to enforce mandatory KYC verification for DC Coin migration. Non-KYC users have their migratable allocation placed on automatic KYC Compliance Hold until identity verification is approved. Includes admin KYC status badges, aggregate metrics for verified vs auto-held migration coins, and client-side KYC gating modals.",
+  "updatedAt": "2026-11-06T18:07:09.555311214Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

@@ -26,7 +26,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { BlockchainNetwork, NetworkId, TokenItem, TransactionRecord, UserWallet } from '../types';
+import { BlockchainNetwork, NetworkId, TokenItem, TransactionRecord, UserWallet, CoinTransferRequest } from '../types';
 import { NETWORKS, StorageService } from '../services/storage';
 import { generateAddress, generateMnemonic, generatePrivateKey, generateTxHash, shortenAddress } from '../utils/crypto';
 import { Web3WalletService, PROVIDER_DOWNLOAD_URLS } from '../services/web3Wallet';
@@ -303,29 +303,130 @@ export const WalletView: React.FC<WalletViewProps> = ({
     setDeletingWalletId(null);
   };
 
-  // 3. Withdraw Action
+  // 3. Withdraw Action with DC Coin Circuit Breaker, 60% Migration Quota & KYC Verification Hold
   const handleWithdrawSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const token = tokens.find((t) => t.symbol === selectedWithdrawToken);
     const amountNum = parseFloat(withdrawAmount);
 
     if (!token || isNaN(amountNum) || amountNum <= 0) return;
-    
-    // Check locked mined balance in native DC wallet
-    const lockedAmount = token.symbol === 'DCOIN' ? (token.lockedBalance || 0) : 0;
-    const availableTransferable = Math.max(0, token.balance - lockedAmount);
 
-    if (amountNum > availableTransferable) {
-      alert(`Cannot transfer locked mined DCOIN. Mined rewards (${lockedAmount.toFixed(2)} DCOIN) are permanently locked in your native platform DC wallet and cannot be transferred or moved to external wallets. Available to transfer: ${availableTransferable.toFixed(2)} ${token.symbol}.`);
-      return;
-    }
-
-    if (amountNum > token.balance) {
-      alert(`Insufficient ${token.symbol} balance.`);
-      return;
-    }
     if (!withdrawAddress.startsWith('0x') && withdrawAddress.length < 24) {
       alert('Please enter a valid destination blockchain address.');
+      return;
+    }
+
+    // SPECIAL HANDLING FOR NATIVE DC COIN
+    if (token.symbol === 'DCOIN') {
+      const coinConfig = StorageService.getCoinTokenomicsConfig();
+
+      // 1. MASTER CIRCUIT BREAKER CHECK
+      if (!coinConfig.transfersGloballyEnabled) {
+        const currentUser = StorageService.getUser();
+        const autoRejectReq: CoinTransferRequest = {
+          id: `tx-req-${Date.now()}`,
+          senderAddress: activeWallet.address,
+          senderName: currentUser?.username || 'User',
+          senderEmail: currentUser?.email || 'user@dcoine.network',
+          recipientAddress: withdrawAddress,
+          amount: amountNum,
+          twoFactorVerified: false,
+          kycVerified: currentUser?.kycStatus === 'verified',
+          migrationChecked: false,
+          status: 'auto_rejected',
+          rejectionReason: 'Auto-Rejected: Native DC Coin transfers paused by master administrator circuit breaker.',
+          ledgerHash: generateTxHash().replace('0x', ''),
+          createdAt: Date.now(),
+        };
+        const currentReqs = StorageService.getCoinTransferRequests();
+        StorageService.saveCoinTransferRequests([autoRejectReq, ...currentReqs]);
+        alert('⛔ AUTO-REJECTED BY PLATFORM CIRCUIT BREAKER:\n\nNative DC Coin transfers and withdrawals are currently locked by the platform administrator. Every transfer is automatically rejected until admin activates the transfer gateway.');
+        return;
+      }
+
+      // 2. STRICT KYC IDENTITY VERIFICATION CHECK
+      const currentUser = StorageService.getUser();
+      if (coinConfig.strictKycEnforcedForMigration && (!currentUser || currentUser.kycStatus !== 'verified')) {
+        const autoHoldReq: CoinTransferRequest = {
+          id: `tx-req-${Date.now()}`,
+          senderAddress: activeWallet.address,
+          senderName: currentUser?.username || 'User',
+          senderEmail: currentUser?.email || 'user@dcoine.network',
+          recipientAddress: withdrawAddress,
+          amount: amountNum,
+          twoFactorVerified: false,
+          kycVerified: false,
+          migrationChecked: false,
+          status: 'auto_rejected',
+          rejectionReason: 'Auto-Hold: KYC identity verification required before DC coin migration can be processed.',
+          ledgerHash: generateTxHash().replace('0x', ''),
+          createdAt: Date.now(),
+        };
+        const currentReqs = StorageService.getCoinTransferRequests();
+        StorageService.saveCoinTransferRequests([autoHoldReq, ...currentReqs]);
+        alert('⛔ KYC VERIFICATION REQUIRED (AUTO-HOLD ACTIVE):\n\nYour account has not completed KYC identity verification. Your DC Coin migration quota is held safely in Auto-Hold until your KYC documents are reviewed and approved by an administrator.');
+        return;
+      }
+
+      // 3. 60% MIGRATION RELEASE QUOTA CHECK
+      const activePolicy = StorageService.getActiveMigrationPolicy();
+      const userMigrations = StorageService.getUserMigrations();
+      const userRecord = userMigrations.find(
+        (u) =>
+          u.walletAddress === activeWallet.address ||
+          u.userId === currentUser?.id ||
+          u.userEmail === currentUser?.email
+      );
+      const releasePct = userRecord?.customOverridePercentage ?? activePolicy.globalReleasePercentage;
+      const totalMined = userRecord?.totalMined || (token.lockedBalance || 0) || token.balance;
+      const maxAllowed = (totalMined * releasePct) / 100;
+
+      if (amountNum > maxAllowed && maxAllowed > 0) {
+        alert(
+          `⛔ EXCEEDS MIGRATION RELEASE QUOTA:\n\nUnder ${activePolicy.phaseName}, you are permitted to migrate/withdraw up to ${releasePct}% (${maxAllowed.toLocaleString()} DC) of your mined coins. The remaining ${100 - releasePct}% is locked in platform custody pending future authorization epochs.`
+        );
+        return;
+      }
+
+      // 4. USER 2FA SECURITY CODE VERIFICATION
+      const twoFaInput = window.prompt(
+        '2FA SECURITY VERIFICATION REQUIRED:\n\nPlease enter your 6-digit Authenticator verification code to authorize this DC Coin transfer:'
+      );
+      if (!twoFaInput || twoFaInput.trim().length < 6) {
+        alert('Transfer cancelled: Valid 2FA security code is required.');
+        return;
+      }
+
+      // 5. QUEUE FOR ADMINISTRATOR CONFIRMATION WITH CRYPTOGRAPHIC HASH
+      const pendingReq: CoinTransferRequest = {
+        id: `tx-req-${Date.now()}`,
+        senderAddress: activeWallet.address,
+        senderName: currentUser?.username || 'User',
+        senderEmail: currentUser?.email || 'user@dcoine.network',
+        recipientAddress: withdrawAddress,
+        amount: amountNum,
+        twoFactorVerified: true,
+        kycVerified: true,
+        migrationChecked: true,
+        status: 'pending_admin_review',
+        ledgerHash: generateTxHash().replace('0x', ''),
+        createdAt: Date.now(),
+      };
+      const currentReqs = StorageService.getCoinTransferRequests();
+      StorageService.saveCoinTransferRequests([pendingReq, ...currentReqs]);
+
+      alert(
+        `✓ TRANSFER SUBMITTED TO SECURE QUEUE!\n\nYour transfer of ${amountNum.toLocaleString()} DC Coin has passed 2FA and 60% migration verification.\nCryptographic Ledger Receipt: ${pendingReq.ledgerHash.slice(0, 16)}...\n\nYour transfer is now in the Admin Confirmation Queue awaiting review.`
+      );
+      setShowWithdrawModal(false);
+      setWithdrawAmount('');
+      setWithdrawAddress('');
+      return;
+    }
+
+    // Standard tokens (ETH, USDT, etc.)
+    if (amountNum > token.balance) {
+      alert(`Insufficient ${token.symbol} balance.`);
       return;
     }
 

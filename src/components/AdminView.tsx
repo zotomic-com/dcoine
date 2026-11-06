@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -20,6 +20,7 @@ import {
   Plus,
   Check,
   Image as ImageIcon,
+  Coins,
 } from 'lucide-react';
 import { TokenItem, P2POrder, TransactionRecord, UserProfile, RevenueRecord } from '../types';
 import { StorageService } from '../services/storage';
@@ -30,6 +31,7 @@ import { AdminUsersTab } from './admin/AdminUsersTab';
 import { AdminEarningsTab } from './admin/AdminEarningsTab';
 import { AdminP2PAdsTab } from './admin/AdminP2PAdsTab';
 import { AdminTransactionsTab } from './admin/AdminTransactionsTab';
+import { AdminCoinTab } from './admin/AdminCoinTab';
 import { AdminSettingsTab } from './admin/AdminSettingsTab';
 import { AdminIntegrationsTab } from './admin/AdminIntegrationsTab';
 import { AdminProfileTab } from './admin/AdminProfileTab';
@@ -55,11 +57,12 @@ export const ADMIN_SECTIONS = [
   { id: 'earnings', label: '3. Earnings/Revenue', icon: DollarSign, badge: 'USD' },
   { id: 'p2pads', label: '4. P2P Ads', icon: Megaphone, badge: 'P2P' },
   { id: 'transactions', label: '5. Transactions', icon: Receipt, badge: 'Chains' },
-  { id: 'cms', label: '6. CMS Management', icon: FileText, badge: 'Live' },
-  { id: 'staff', label: '7. Staff & Team', icon: Users2, badge: 'Roles' },
-  { id: 'settings', label: '8. Settings', icon: Settings, badge: 'Full' },
-  { id: 'integrations', label: '9. Integrations', icon: Plug, badge: 'API' },
-  { id: 'profile', label: '10. Profile', icon: User, badge: '2FA' },
+  { id: 'coin', label: '6. Coin (DC Native)', icon: Coins, badge: 'Native' },
+  { id: 'cms', label: '7. CMS Management', icon: FileText, badge: 'Live' },
+  { id: 'staff', label: '8. Staff & Team', icon: Users2, badge: 'Roles' },
+  { id: 'settings', label: '9. Settings', icon: Settings, badge: 'Full' },
+  { id: 'integrations', label: '10. Integrations', icon: Plug, badge: 'API' },
+  { id: 'profile', label: '11. Profile', icon: User, badge: '2FA' },
 ];
 
 export const AdminView: React.FC<AdminViewProps> = ({
@@ -100,8 +103,56 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [selectedAd, setSelectedAd] = useState<P2POrder | null>(null);
   const [selectedTx, setSelectedTx] = useState<TransactionRecord | null>(null);
 
-  // Admin profile info for sidebar
-  const adminProfile = StorageService.getAdminProfileSettings();
+  // Admin profile info for sidebar with image management
+  const [adminProfile, setAdminProfile] = useState(() => StorageService.getAdminProfileSettings());
+  const [showImageManager, setShowImageManager] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [managerNotice, setManagerNotice] = useState<string | null>(null);
+
+  // Sync profile when section changes or on storage update
+  useEffect(() => {
+    const current = StorageService.getAdminProfileSettings();
+    setAdminProfile(current);
+    setImageUrlInput(current.avatarUrl || '');
+  }, [activeSection]);
+
+  const presets = StorageService.getAdminAvatarPresets();
+
+  const handleSaveAdminImage = (newUrl: string) => {
+    const trimmed = newUrl.trim();
+    if (!trimmed) return;
+    const updated = { ...adminProfile, avatarUrl: trimmed };
+    StorageService.saveAdminProfileSettings(updated);
+
+    const currentUser = StorageService.getUser();
+    if (currentUser && currentUser.role === 'admin') {
+      currentUser.avatarUrl = trimmed;
+      StorageService.saveUser(currentUser);
+      StorageService.updateUser(currentUser);
+    }
+
+    setAdminProfile(updated);
+    setImageUrlInput(trimmed);
+    setManagerNotice('✓ Admin image updated successfully!');
+    setTimeout(() => setManagerNotice(null), 2500);
+  };
+
+  const handleDeleteAdminImage = () => {
+    const updated = { ...adminProfile, avatarUrl: '' };
+    StorageService.saveAdminProfileSettings(updated);
+
+    const currentUser = StorageService.getUser();
+    if (currentUser && currentUser.role === 'admin') {
+      currentUser.avatarUrl = '';
+      StorageService.saveUser(currentUser);
+      StorageService.updateUser(currentUser);
+    }
+
+    setAdminProfile(updated);
+    setImageUrlInput('');
+    setManagerNotice('✓ Admin image removed / deleted.');
+    setTimeout(() => setManagerNotice(null), 2500);
+  };
 
   // Handlers for user mutations
   const handleAddUser = (user: UserProfile) => {
@@ -261,39 +312,182 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </nav>
 
         {/* Footer with Admin Avatar & ITEM 9: LOG OUT (ONLY ICON) */}
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
-          <div
-            onClick={() => navigateTo('profile')}
-            className="flex items-center gap-2.5 cursor-pointer group flex-1 min-w-0 pr-2"
-          >
-            {adminProfile.avatarUrl ? (
-              <img
-                src={adminProfile.avatarUrl}
-                alt={adminProfile.name}
-                className="w-8 h-8 rounded-full object-cover border border-amber-500/40 group-hover:border-amber-400 transition"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0">
-                <Shield className="w-4 h-4" />
+        <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
+          {/* Main User Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 cursor-pointer group flex-1 min-w-0 pr-2">
+              <div className="relative shrink-0">
+                {adminProfile.avatarUrl ? (
+                  <img
+                    src={adminProfile.avatarUrl}
+                    alt={adminProfile.name}
+                    onClick={() => setShowImageManager((prev) => !prev)}
+                    className="w-8 h-8 rounded-full object-cover border border-amber-500/40 group-hover:border-amber-400 transition cursor-pointer hover:scale-105"
+                    title="Click to Add, Edit, or Delete Admin Image"
+                  />
+                ) : (
+                  <div
+                    onClick={() => setShowImageManager((prev) => !prev)}
+                    className="w-8 h-8 rounded-full bg-slate-800 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0 cursor-pointer hover:border-amber-400 transition"
+                    title="Click to Add Admin Image"
+                  >
+                    <Shield className="w-4 h-4" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowImageManager((prev) => !prev);
+                  }}
+                  className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center shadow-md transition"
+                  title="Image Controls (Add, Edit, Delete)"
+                >
+                  <Edit2 className="w-2 h-2" />
+                </button>
               </div>
-            )}
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-white group-hover:text-amber-300 truncate transition">
-                {adminProfile.name}
+              <div
+                onClick={() => navigateTo('profile')}
+                className="min-w-0 flex-1"
+                title="Go to Admin Profile"
+              >
+                <div className="text-xs font-bold text-white group-hover:text-amber-300 truncate transition">
+                  {adminProfile.name}
+                </div>
+                <div className="text-[10px] text-slate-400 truncate">{adminProfile.email}</div>
               </div>
-              <div className="text-[10px] text-slate-400 truncate">{adminProfile.email}</div>
             </div>
+
+            {/* ITEM 9: LOG OUT (FOR LOG OUT USE ONLY ICON) */}
+            <button
+              onClick={handleAdminLogout}
+              title="Log Out"
+              aria-label="Log out"
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border border-red-500/20 transition flex-shrink-0 shadow-sm cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* ITEM 9: LOG OUT (FOR LOG OUT USE ONLY ICON) */}
-          <button
-            onClick={handleAdminLogout}
-            title="Log Out"
-            aria-label="Log out"
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border border-red-500/20 transition flex-shrink-0 shadow-sm"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          {/* Quick Add / Edit / Delete Action Buttons Row */}
+          <div className="flex items-center gap-1.5 pt-0.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                setShowImageManager(true);
+                setImageUrlInput('');
+              }}
+              className="flex-1 py-1 px-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold flex items-center justify-center gap-1 transition cursor-pointer text-[10px]"
+              title="Add a new image"
+            >
+              <Plus className="w-2.5 h-2.5" />
+              <span>Add</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowImageManager(true);
+                setImageUrlInput(adminProfile.avatarUrl || '');
+              }}
+              className="flex-1 py-1 px-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 font-semibold flex items-center justify-center gap-1 transition cursor-pointer text-[10px]"
+              title="Edit image URL"
+            >
+              <Edit2 className="w-2.5 h-2.5" />
+              <span>Edit</span>
+            </button>
+            {adminProfile.avatarUrl && (
+              <button
+                type="button"
+                onClick={handleDeleteAdminImage}
+                className="py-1 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-semibold flex items-center justify-center gap-1 transition cursor-pointer text-[10px]"
+                title="Delete admin photo"
+              >
+                <Trash2 className="w-2.5 h-2.5" />
+                <span>Delete</span>
+              </button>
+            )}
+          </div>
+
+          {/* Expandable Image Manager Popover */}
+          {showImageManager && (
+            <div className="mt-1 p-2.5 rounded-2xl bg-slate-900 border border-amber-500/40 shadow-2xl space-y-2 animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                <div className="flex items-center gap-1 text-[11px] font-bold text-white">
+                  <ImageIcon className="w-3 h-3 text-amber-400" />
+                  <span>Admin Image Manager</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowImageManager(false)}
+                  className="p-0.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+
+              {managerNotice && (
+                <div className="text-[10px] p-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold">
+                  {managerNotice}
+                </div>
+              )}
+
+              {/* Add / Edit Input Field */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-semibold text-slate-300 block">
+                  {adminProfile.avatarUrl ? 'Edit / Enter Image URL:' : 'Add New Image URL:'}
+                </label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    placeholder="https://... image URL"
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    className="flex-1 p-1 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono text-[10px] focus:outline-none focus:border-amber-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSaveAdminImage(imageUrlInput)}
+                    className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-[10px] transition flex items-center gap-0.5 shrink-0"
+                  >
+                    <Check className="w-2.5 h-2.5" />
+                    <span>Save</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Presets Gallery */}
+              <div className="space-y-1 pt-0.5">
+                <div className="flex items-center justify-between text-[9px] text-slate-400">
+                  <span className="font-semibold uppercase tracking-wider">Presets:</span>
+                  {adminProfile.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteAdminImage}
+                      className="text-rose-400 hover:underline flex items-center gap-0.5"
+                    >
+                      <Trash2 className="w-2 h-2" /> Delete
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  {presets.slice(0, 4).map((preset, idx) => (
+                    <img
+                      key={idx}
+                      src={preset}
+                      alt={`preset-${idx}`}
+                      onClick={() => handleSaveAdminImage(preset)}
+                      className={`w-full aspect-square rounded-md object-cover cursor-pointer border transition hover:scale-105 ${
+                        adminProfile.avatarUrl === preset
+                          ? 'border-amber-400 ring-1 ring-amber-400'
+                          : 'border-slate-800 opacity-60 hover:opacity-100'
+                      }`}
+                      title="Click to apply"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     )}
@@ -548,19 +742,22 @@ export const AdminView: React.FC<AdminViewProps> = ({
           />
         )}
 
-        {/* Section 6: CMS */}
+        {/* Section 6: Native Coin Management */}
+        {activeSection === 'coin' && <AdminCoinTab />}
+
+        {/* Section 7: CMS */}
         {activeSection === 'cms' && <AdminCMSTab />}
 
-        {/* Section 7: Staff */}
+        {/* Section 8: Staff */}
         {activeSection === 'staff' && <AdminStaffTab />}
 
-        {/* Section 8: Settings */}
+        {/* Section 9: Settings */}
         {activeSection === 'settings' && <AdminSettingsTab />}
 
-        {/* Section 9: Integrations */}
+        {/* Section 10: Integrations */}
         {activeSection === 'integrations' && <AdminIntegrationsTab />}
 
-        {/* Section 10: Profile */}
+        {/* Section 11: Profile */}
         {activeSection === 'profile' && <AdminProfileTab />}
       </main>
 

@@ -342,15 +342,6 @@ export default function App() {
             activeNetwork={activeNetwork}
             onSelectNetwork={handleSelectNetwork}
             onUpdateTokens={setTokens}
-            onOpenAdmin={() => {
-              if (user?.role === 'admin') {
-                setIsAdminMode(true);
-                setCurrentTab('admin');
-              } else {
-                setAuthModalInitialMode('admin_login');
-                setAuthModalOpen(true);
-              }
-            }}
           />
         )}
 

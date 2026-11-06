@@ -143,11 +143,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-sm sm:text-base font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
                   Dcoine
                 </span>
-                <span className="hidden sm:inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  ECOSYSTEM
-                </span>
               </div>
-              <p className="text-[9px] text-slate-400 hidden sm:block -mt-0.5 font-medium">Decentralized Coin</p>
+              <p className="text-[9px] text-slate-400 hidden sm:block -mt-0.5 font-medium">Decentralized Coin Ecosystem</p>
             </div>
           </div>
         </div>
